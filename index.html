@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventario 3D — Depto. Mecánica Suspensiones CCS</title>
+<title>Departamento de Mecánica Suspensiones CCS — Inventario 3D</title>
 <meta name="description" content="Panel en vivo del inventario de piezas impresas en 3D, filamento, ensamblaje e historial de impresión del Departamento de Mecánica.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,12 +18,13 @@
   <div class="brand">
     <span class="brand-dot" id="statusDot" title="Estado de la conexión"></span>
     <div class="brand-text">
-      <h1>Inventario 3D</h1>
-      <p>Departamento de Mecánica · Suspensiones CCS</p>
+      <h1>Departamento de Mecánica Suspensiones CCS</h1>
+      <p>Inventario 3D · Panel en vivo</p>
     </div>
   </div>
   <div class="live-status">
     <div class="live-status-row">
+      <a class="notion-link" href="https://app.notion.com/p/3b1b9bc8b858809dadf5e07fdedf78ba?v=3b1b9bc8b85881208c90000cf5532683" target="_blank" rel="noopener">📋 Gestión de tareas</a>
       <span class="live-badge" id="liveBadge">EN VIVO</span>
       <span id="lastUpdated">Cargando…</span>
     </div>
@@ -38,14 +39,27 @@
   <button class="tab-btn" data-tab="ensamblaje">Ensamblaje</button>
   <button class="tab-btn" data-tab="historial">Historial Impresoras</button>
   <button class="tab-btn" data-tab="sku">Guía SKU</button>
+  <button class="tab-btn" data-tab="equipo">Equipo</button>
 </nav>
 
 <main id="app">
 
   <!-- ================= INICIO ================= -->
   <section class="tab-panel active" id="panel-inicio">
+    <img class="hero-img" id="heroImg" src="Imagenes/solidworks-2022-nemo-submarine-render-1024x576.webp" alt=""
+         onerror="this.style.display='none'">
     <div class="section-head">
       <h2>Resumen general</h2>
+      <p class="about-text">
+        Somos el equipo de Mecánica de Suspensiones CCS, con base en Caracas y respaldo
+        logístico de SUSPENSIONES CCS LLC. Diseñamos, desarrollamos e imprimimos en 3D las
+        piezas y componentes que sostienen las soluciones de ingeniería del departamento:
+        repuestos y partes a medida que no existen comercialmente, kits de adaptación para
+        vehículos 4x4, y el montaje de estaciones móviles Starlink Mini sobre motos de
+        emergencia para apoyar la respuesta rápida ante crisis. Cubrimos cada pieza de
+        principio a fin — diseño CAD, preparación de impresión, producción en la flota
+        FDM/SLA, control de calidad y entrega o montaje final.
+      </p>
       <p class="section-sub">Vista consolidada de todas las pestañas del Sheet de inventario.</p>
     </div>
     <div class="kpi-row" id="kpiInicio"></div>
@@ -57,6 +71,7 @@
 
   <!-- ================= IMPRESIONES ================= -->
   <section class="tab-panel" id="panel-impresiones">
+    <img class="section-banner" src="Imagenes/images.jpg" alt="" onerror="this.style.display='none'">
     <div class="section-head">
       <h2>Inventario de piezas impresas en 3D</h2>
       <p class="section-sub">Fuente: pestaña «Inventario de impresiones».</p>
@@ -92,6 +107,12 @@
       <label for="filterMaterial">Filtro — Material:</label>
       <select id="filterMaterial"><option value="">(Todos)</option></select>
     </div>
+    <div class="info-banner">
+      ⚠️ Un "Disponible" negativo no significa que exista filamento negativo físicamente
+      — significa que el consumo registrado en el Sheet todavía no se ha conciliado con
+      el stock real (desfase de registro). Es una señal para actualizar el inventario, no
+      un error de esta página.
+    </div>
     <div class="kpi-row" id="kpiFilamento"></div>
     <div class="chart-card wide">
       <h3>Disponible (g) por material <span class="static-tag">vista fija</span></h3>
@@ -105,6 +126,7 @@
 
   <!-- ================= ENSAMBLAJE ================= -->
   <section class="tab-panel" id="panel-ensamblaje">
+    <img class="section-banner" src="Imagenes/images (2).jpg" alt="" onerror="this.style.display='none'">
     <div class="section-head">
       <h2>Inventario de ensamblaje</h2>
       <p class="section-sub">Fuente: pestaña «Inventario Ensamblaje».</p>
@@ -144,14 +166,33 @@
       <p class="section-sub">Referencia estática — fuente: pestaña «Registro De Inventario».</p>
     </div>
     <div class="sku-example">
-      <span class="sku-example-code">SL-CS-AS-001-C</span>
+      <span class="sku-example-code">EQ-CS-ASA-002 P1</span>
       <span class="sku-example-arrow">→</span>
-      <span class="sku-example-desc">Starlink · Carcasa · Material ASA · Ítem 001 · Cuerpo</span>
+      <span class="sku-example-desc">Equipamiento · Carcasas y Protecciones · ASA · Ítem 002 · Retención/Cuerda (P1)</span>
     </div>
-    <p class="sku-structure">Estructura: <code>[SISTEMA]-[SUBSISTEMA]-[MATERIAL]-[Nº CORRELATIVO]-[SUFIJO]</code></p>
+    <p class="sku-structure">Estructura: <code>[SISTEMA]-[SUBSISTEMA]-[MATERIAL]-[Nº CORRELATIVO] [SUFIJO]</code></p>
+    <p class="section-sub sku-note">
+      ⚠️ Se corrigió el ejemplo y la columna de Material el 2026-08-19: la guía original
+      (pestaña «Registro De Inventario») documentaba los materiales abreviados a 2 letras
+      («TP», «AS»), pero ningún código real del inventario usa esa forma — todos escriben
+      el material completo («TPU», «ASA», «PLA»). Se muestra abajo lo que realmente está en
+      uso, verificado contra los códigos reales de «Inventario de impresiones». También hay
+      un puñado de códigos antiguos que no siguen esta convención (ej. «CA 08-01»),
+      anteriores a que se definiera este esquema — no se muestran aquí por no ser parte de
+      la nomenclatura vigente.
+    </p>
     <div class="table-card">
       <div class="table-scroll"><table id="tablaSku"></table></div>
     </div>
+  </section>
+
+  <!-- ================= EQUIPO ================= -->
+  <section class="tab-panel" id="panel-equipo">
+    <div class="section-head">
+      <h2>Equipo</h2>
+      <p class="section-sub">Integrantes del Departamento de Mecánica.</p>
+    </div>
+    <div class="team-grid" id="teamGrid"></div>
   </section>
 
 </main>

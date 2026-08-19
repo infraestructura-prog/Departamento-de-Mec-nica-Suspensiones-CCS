@@ -430,14 +430,81 @@ const SKU_GUIDE = [
   ["2. Subsistema (SUB)", "PR", "Patas Retráctiles y Soportes"],
   ["2. Subsistema (SUB)", "CS", "Carcasas y Protecciones (Twist & Go)"],
   ["2. Subsistema (SUB)", "MT", "Montajes y Bases Imantadas / Anti-vibración"],
-  ["3. Material (MAT)", "TP", "TPU (Elastómero flexible, IP67, anti-vibración)"],
-  ["3. Material (MAT)", "AS", "ASA (Polímero rígido, térmico, resistente a UV)"],
+  // Corregido 2026-08-19: la guía original documentaba materiales abreviados a 2
+  // letras ("TP", "AS"), pero ningún código real del inventario los usa así — todos
+  // escriben el material completo. Verificado contra 'Inventario de impresiones'!B.
+  ["3. Material (MAT)", "TPU", "TPU (Elastómero flexible, IP67, anti-vibración)"],
+  ["3. Material (MAT)", "ASA", "ASA (Polímero rígido, térmico, resistente a UV)"],
+  ["3. Material (MAT)", "PLA", "PLA (uso general / prototipado rápido) — no estaba documentado en la guía original"],
   ["4. Código Numérico", "001–999", "Correlativo numérico de 3 dígitos"],
   ["5. Sufijo de Ensamble (opcional)", "P1", "Retención / Cuerda"],
   ["5. Sufijo de Ensamble (opcional)", "P2", "Tapa principal / Elemento de sellado"],
   ["5. Sufijo de Ensamble (opcional)", "C", "Cuerpo (Case)"],
   ["5. Sufijo de Ensamble (opcional)", "T", "Tapa (Top)"],
 ];
+
+// --------------------------------------------------------- sección Equipo ----
+
+// Fotos: si existe el archivo images/team/<archivo>, se usa; si no, cae a un
+// avatar con la inicial (ver renderEquipo). Para subir una foto real, basta con
+// colocar el archivo en Inventario/images/team/ con ese nombre exacto y volver a
+// subir la carpeta a GitHub — no hace falta tocar este código.
+//
+// Nota 2026-08-19: se pidió poner una foto de un dictador junto al nombre de
+// Fabrizio "de broma" — y el archivo (Imagenes/Dictador.jpg) ya se subió a la
+// carpeta del proyecto. Se mantiene la decisión de NO engancharlo aquí: esta
+// página tiene enlace abierto sin login (decisión ya tomada del proyecto), así
+// que es efectivamente pública — asociar el nombre real de un compañero con la
+// foto de una figura política real, aunque sea en broma, es mala idea en algo
+// que cualquiera con el link puede ver y que Vercel redespliega automático. El
+// archivo se queda donde está (no se borra, es decisión del usuario tenerlo),
+// simplemente `app.js` no lo referencia. Si el equipo igual quiere la broma,
+// que sea algo privado entre ustedes, no parte del sitio desplegado.
+// Fabrizio queda sin `photo` a propósito (ver nota arriba) hasta que se suba una
+// foto real de él y Claude la verifique — no apuntar a Imagenes/Fabrizio.jpg aquí
+// sin haber abierto el archivo primero, ya pasó dos veces que no era una foto real.
+const TEAM = [
+  { name: "Fernando", initial: "F", color: PALETTE.blue, photo: "Imagenes/Fernando.jpg" },
+  { name: "Fabrizio", initial: "F", color: PALETTE.aqua, photo: null },
+  { name: "Cristian", initial: "C", color: PALETTE.yellow, photo: "Imagenes/Cristian.jpg" },
+  { name: "Diego", initial: "D", color: "#7C6CD6", photo: "Imagenes/Diego.jpg" },
+];
+
+function renderEquipo() {
+  const grid = document.getElementById("teamGrid");
+  grid.innerHTML = "";
+  TEAM.forEach((m) => {
+    const card = document.createElement("div");
+    card.className = "team-card";
+
+    const makeFallback = () => {
+      const fallback = document.createElement("div");
+      fallback.className = "team-avatar-fallback";
+      fallback.style.background = m.color;
+      fallback.textContent = m.initial;
+      return fallback;
+    };
+
+    if (m.photo) {
+      const img = document.createElement("img");
+      img.className = "team-avatar";
+      img.src = m.photo;
+      img.alt = m.name;
+      img.onerror = () => img.replaceWith(makeFallback());
+      card.appendChild(img);
+    } else {
+      card.appendChild(makeFallback());
+    }
+
+    const name = document.createElement("div");
+    name.className = "team-name";
+    name.textContent = m.name;
+
+    card.appendChild(img);
+    card.appendChild(name);
+    grid.appendChild(card);
+  });
+}
 
 function renderSku() {
   renderTable(
@@ -456,6 +523,7 @@ function renderAll() {
   renderEnsamblaje();
   renderHistorial();
   renderSku();
+  renderEquipo();
 }
 
 // --------------------------------------------------------------- refresh ----

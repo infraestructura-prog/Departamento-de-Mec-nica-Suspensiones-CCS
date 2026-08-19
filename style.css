@@ -120,6 +120,19 @@ h1, h2, h3, .brand-text h1 {
   background: rgba(237, 161, 0, 0.08);
 }
 
+.notion-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--card-fill-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.notion-link:hover { color: var(--ink); border-color: var(--blue); }
+
 #refreshBtn {
   font-family: inherit;
   font-size: 12.5px;
@@ -181,6 +194,50 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px; position: relative; z-i
 .section-head { margin-bottom: 20px; }
 .section-head h2 { margin: 0 0 4px; font-size: 22px; color: var(--ink); }
 .section-sub { margin: 0; font-size: 13px; color: var(--muted); }
+.about-text {
+  margin: 6px 0 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 760px;
+}
+.sku-note { margin-top: 6px; max-width: 760px; }
+
+/* Imagen hero opcional — si el archivo no existe, onerror la oculta sin romper el layout */
+.hero-img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  filter: saturate(0.9) brightness(0.85);
+}
+
+.section-banner {
+  display: block;
+  width: 100%;
+  max-height: 130px;
+  object-fit: cover;
+  object-position: center 30%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin-bottom: 18px;
+  filter: saturate(0.75) brightness(0.55) contrast(1.05);
+}
+
+.info-banner {
+  background: rgba(237, 161, 0, 0.08);
+  border: 1px solid rgba(237, 161, 0, 0.35);
+  border-left: 3px solid var(--yellow);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+}
 
 /* ---------------------------------- filter bar ---------------------------------- */
 
@@ -353,6 +410,49 @@ tbody tr:last-child td { border-bottom: none; }
   padding: 2px 6px;
   color: var(--ink-2);
 }
+
+/* ---------------------------------- equipo ---------------------------------- */
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.team-card {
+  background: var(--card-fill);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 18px;
+  text-align: center;
+}
+
+.team-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  display: block;
+}
+
+.team-avatar-fallback {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.team-name { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+.team-role { font-size: 12px; color: var(--muted); }
 
 /* ---------------------------------- footer ---------------------------------- */
 
