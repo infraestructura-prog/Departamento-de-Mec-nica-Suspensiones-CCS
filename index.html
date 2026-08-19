@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventario 3D — Depto. Mecánica Suspensiones CCS</title>
+<meta name="description" content="Panel en vivo del inventario de piezas impresas en 3D, filamento, ensamblaje e historial de impresión del Departamento de Mecánica.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="scan-overlay" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-dot" id="statusDot" title="Estado de la conexión"></span>
+    <div class="brand-text">
+      <h1>Inventario 3D</h1>
+      <p>Departamento de Mecánica · Suspensiones CCS</p>
+    </div>
+  </div>
+  <div class="live-status">
+    <div class="live-status-row">
+      <span class="live-badge" id="liveBadge">EN VIVO</span>
+      <span id="lastUpdated">Cargando…</span>
+    </div>
+    <button id="refreshBtn" type="button">↻ Actualizar ahora</button>
+  </div>
+</header>
+
+<nav class="tabs" id="tabNav" aria-label="Secciones del inventario">
+  <button class="tab-btn active" data-tab="inicio">Inicio</button>
+  <button class="tab-btn" data-tab="impresiones">Impresiones 3D</button>
+  <button class="tab-btn" data-tab="filamento">Filamento</button>
+  <button class="tab-btn" data-tab="ensamblaje">Ensamblaje</button>
+  <button class="tab-btn" data-tab="historial">Historial Impresoras</button>
+  <button class="tab-btn" data-tab="sku">Guía SKU</button>
+</nav>
+
+<main id="app">
+
+  <!-- ================= INICIO ================= -->
+  <section class="tab-panel active" id="panel-inicio">
+    <div class="section-head">
+      <h2>Resumen general</h2>
+      <p class="section-sub">Vista consolidada de todas las pestañas del Sheet de inventario.</p>
+    </div>
+    <div class="kpi-row" id="kpiInicio"></div>
+    <div class="chart-card wide">
+      <h3>Filamento disponible por material</h3>
+      <div class="chart-wrap"><canvas id="chartInicioFilamento"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ================= IMPRESIONES ================= -->
+  <section class="tab-panel" id="panel-impresiones">
+    <div class="section-head">
+      <h2>Inventario de piezas impresas en 3D</h2>
+      <p class="section-sub">Fuente: pestaña «Inventario de impresiones».</p>
+    </div>
+    <div class="filter-bar">
+      <label for="filterTipoFilamento">Filtro — Tipo de filamento:</label>
+      <select id="filterTipoFilamento"><option value="">(Todas)</option></select>
+    </div>
+    <div class="kpi-row" id="kpiImpresiones"></div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Piezas por tipo de filamento <span class="static-tag">vista fija</span></h3>
+        <div class="chart-wrap"><canvas id="chartImpresionesTipo"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Top 10 piezas en stock</h3>
+        <div class="chart-wrap"><canvas id="chartImpresionesTop"></canvas></div>
+      </div>
+    </div>
+    <div class="table-card">
+      <h3>Detalle de piezas</h3>
+      <div class="table-scroll"><table id="tablaImpresiones"></table></div>
+    </div>
+  </section>
+
+  <!-- ================= FILAMENTO ================= -->
+  <section class="tab-panel" id="panel-filamento">
+    <div class="section-head">
+      <h2>Filamento</h2>
+      <p class="section-sub">Disponibilidad agregada («Control de Filamento», actualizada cada 30 min por Apps Script) + rollos individuales («Inventario filamento»).</p>
+    </div>
+    <div class="filter-bar">
+      <label for="filterMaterial">Filtro — Material:</label>
+      <select id="filterMaterial"><option value="">(Todos)</option></select>
+    </div>
+    <div class="kpi-row" id="kpiFilamento"></div>
+    <div class="chart-card wide">
+      <h3>Disponible (g) por material <span class="static-tag">vista fija</span></h3>
+      <div class="chart-wrap"><canvas id="chartFilamentoDisponible"></canvas></div>
+    </div>
+    <div class="table-card">
+      <h3>Rollos de filamento</h3>
+      <div class="table-scroll"><table id="tablaFilamento"></table></div>
+    </div>
+  </section>
+
+  <!-- ================= ENSAMBLAJE ================= -->
+  <section class="tab-panel" id="panel-ensamblaje">
+    <div class="section-head">
+      <h2>Inventario de ensamblaje</h2>
+      <p class="section-sub">Fuente: pestaña «Inventario Ensamblaje».</p>
+    </div>
+    <div class="kpi-row" id="kpiEnsamblaje"></div>
+    <div class="table-card">
+      <h3>Detalle</h3>
+      <div class="table-scroll"><table id="tablaEnsamblaje"></table></div>
+    </div>
+  </section>
+
+  <!-- ================= HISTORIAL ================= -->
+  <section class="tab-panel" id="panel-historial">
+    <div class="section-head">
+      <h2>Historial de impresoras</h2>
+      <p class="section-sub">Fuente: pestaña «Historial Impresoras» (registro automático desde Bambu Cloud).</p>
+    </div>
+    <div class="filter-bar">
+      <label for="filterMaterialHistorial">Filtro — Material impreso:</label>
+      <select id="filterMaterialHistorial"><option value="">(Todos)</option></select>
+    </div>
+    <div class="kpi-row" id="kpiHistorial"></div>
+    <div class="chart-card wide">
+      <h3>Gramos consumidos por día <span class="static-tag">vista fija</span></h3>
+      <div class="chart-wrap"><canvas id="chartHistorialTrend"></canvas></div>
+    </div>
+    <div class="table-card">
+      <h3>Registro de trabajos (más reciente primero)</h3>
+      <div class="table-scroll"><table id="tablaHistorial"></table></div>
+    </div>
+  </section>
+
+  <!-- ================= GUÍA SKU ================= -->
+  <section class="tab-panel" id="panel-sku">
+    <div class="section-head">
+      <h2>Guía rápida de nomenclatura de SKU</h2>
+      <p class="section-sub">Referencia estática — fuente: pestaña «Registro De Inventario».</p>
+    </div>
+    <div class="sku-example">
+      <span class="sku-example-code">SL-CS-AS-001-C</span>
+      <span class="sku-example-arrow">→</span>
+      <span class="sku-example-desc">Starlink · Carcasa · Material ASA · Ítem 001 · Cuerpo</span>
+    </div>
+    <p class="sku-structure">Estructura: <code>[SISTEMA]-[SUBSISTEMA]-[MATERIAL]-[Nº CORRELATIVO]-[SUFIJO]</code></p>
+    <div class="table-card">
+      <div class="table-scroll"><table id="tablaSku"></table></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>Datos leídos en vivo desde Google Sheets · se actualiza automáticamente cada 5 minutos.
+     Los precios/costos no se registran en Notion sino directamente aquí desde el Sheet.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
