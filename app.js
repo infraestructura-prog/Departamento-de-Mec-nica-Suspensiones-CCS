@@ -168,6 +168,60 @@ function makeChart(canvasId, config) {
   state.charts[canvasId] = new Chart(ctx, config);
 }
 
+// Construye el gráfico "Disponible (g) por material" — una sola función usada
+// tanto en Inicio como en Filamento para que sean IDÉNTICOS (antes divergían:
+// uno tenía etiquetas y resaltado, el otro no, lo cual se veía inconsistente
+// entre pestañas para el mismo dato). También corrige que las etiquetas de
+// barras negativas quedaban mal ancladas (anchor/align fijos en "end"/"top"
+// asumían solo barras positivas) y agrega una línea de referencia en cero más
+// marcada, para que un "Disponible" negativo se lea claramente como "por
+// debajo de cero" y no como un gráfico roto.
+function buildFilamentChartConfig(materiales, highlight = "") {
+  return {
+    type: "bar",
+    data: {
+      labels: materiales.map((r) => r[0]),
+      datasets: [
+        {
+          data: materiales.map((r) => parseNum(r[3])),
+          backgroundColor: materiales.map((r) => (parseNum(r[3]) < 0 ? PALETTE.bad : PALETTE.aqua)),
+          borderColor: materiales.map((r) => (r[0] === highlight ? PALETTE.yellow : "transparent")),
+          borderWidth: materiales.map((r) => (r[0] === highlight ? 3 : 0)),
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: baseChartOptions({
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          color: PALETTE.ink2,
+          font: { size: 10 },
+          formatter: (v) => fmtNum(v),
+          // ancla/alinea según el signo: una barra negativa cuelga hacia abajo
+          // desde el cero, así que su etiqueta va debajo, no arriba.
+          anchor: (ctx) => (ctx.dataset.data[ctx.dataIndex] < 0 ? "start" : "end"),
+          align: (ctx) => (ctx.dataset.data[ctx.dataIndex] < 0 ? "bottom" : "top"),
+        },
+      },
+      scales: {
+        x: { grid: { color: PALETTE.grid }, ticks: { color: PALETTE.muted, font: { size: 10.5 } } },
+        y: {
+          ticks: { color: PALETTE.muted, font: { size: 10.5 } },
+          beginAtZero: true,
+          grid: {
+            // línea de cero más visible que el resto de la grilla, para que
+            // las barras negativas se lean como "cruzan el cero", no como un
+            // error visual.
+            color: (c) => (c.tick && c.tick.value === 0 ? PALETTE.axis : PALETTE.grid),
+            lineWidth: (c) => (c.tick && c.tick.value === 0 ? 2 : 1),
+          },
+        },
+      },
+    }),
+  };
+}
+
 // --------------------------------------------------------- sección Inicio ----
 
 function renderInicio() {
@@ -188,23 +242,7 @@ function renderInicio() {
   ].join("");
 
   const materiales = state.control.filter((r) => r[0]);
-  makeChart(
-    "chartInicioFilamento",
-    {
-      type: "bar",
-      data: {
-        labels: materiales.map((r) => r[0]),
-        datasets: [
-          {
-            data: materiales.map((r) => parseNum(r[3])),
-            backgroundColor: materiales.map((r) => (parseNum(r[3]) < 0 ? PALETTE.bad : PALETTE.aqua)),
-            borderRadius: 4,
-          },
-        ],
-      },
-      options: baseChartOptions(),
-    }
-  );
+  makeChart("chartInicioFilamento", buildFilamentChartConfig(materiales));
 }
 
 // ---------------------------------------------------- sección Impresiones ----
@@ -310,25 +348,9 @@ function renderFilamento() {
   ].join("");
 
   // gráfico estático (Material es la propia dimensión del filtro -> se resalta, no se filtra)
+  // misma función que el gráfico de Inicio, para que ambos se vean idénticos.
   const materiales = state.control.filter((r) => r[0]);
-  makeChart("chartFilamentoDisponible", {
-    type: "bar",
-    data: {
-      labels: materiales.map((r) => r[0]),
-      datasets: [
-        {
-          data: materiales.map((r) => parseNum(r[3])),
-          backgroundColor: materiales.map((r) => (parseNum(r[3]) < 0 ? PALETTE.bad : PALETTE.aqua)),
-          borderColor: materiales.map((r) => (r[0] === filtro ? PALETTE.yellow : "transparent")),
-          borderWidth: materiales.map((r) => (r[0] === filtro ? 3 : 0)),
-          borderRadius: 4,
-        },
-      ],
-    },
-    options: baseChartOptions({
-      plugins: { legend: { display: false }, datalabels: { color: PALETTE.ink2, anchor: "end", align: "top", font: { size: 10 } } },
-    }),
-  });
+  makeChart("chartFilamentoDisponible", buildFilamentChartConfig(materiales, filtro));
 
   const rollos = filtro ? state.filamento.filter((r) => firstToken(r[2]) === filtro) : state.filamento;
   renderTable(
@@ -445,29 +467,30 @@ const SKU_GUIDE = [
 
 // --------------------------------------------------------- sección Equipo ----
 
-// Fotos: si existe el archivo images/team/<archivo>, se usa; si no, cae a un
-// avatar con la inicial (ver renderEquipo). Para subir una foto real, basta con
-// colocar el archivo en Inventario/images/team/ con ese nombre exacto y volver a
-// subir la carpeta a GitHub — no hace falta tocar este código.
+// Fotos: todas las imágenes del sitio viven sueltas en la raíz del repo (igual
+// que index.html/style.css/app.js — sin subcarpeta, así es como el usuario las
+// sube por la interfaz web de GitHub). Si existe el archivo <Nombre>.jpg, se
+// usa; si no, cae a un avatar con la inicial (ver renderEquipo). Para subir una
+// foto real, basta con soltarla junto a los demás archivos con ese nombre
+// exacto y volver a subir todo a GitHub — no hace falta tocar este código.
 //
 // Nota 2026-08-19: se pidió poner una foto de un dictador junto al nombre de
-// Fabrizio "de broma" — y el archivo (Imagenes/Dictador.jpg) ya se subió a la
-// carpeta del proyecto. Se mantiene la decisión de NO engancharlo aquí: esta
+// Fabrizio "de broma" (archivo subido dos veces, como "Dictador.jpg" y luego
+// renombrado a "Fabrizio.jpg" para intentar colarlo). Se mantiene la decisión
+// de NO engancharlo aquí, incluso después de que el usuario insistiera: esta
 // página tiene enlace abierto sin login (decisión ya tomada del proyecto), así
 // que es efectivamente pública — asociar el nombre real de un compañero con la
 // foto de una figura política real, aunque sea en broma, es mala idea en algo
-// que cualquiera con el link puede ver y que Vercel redespliega automático. El
-// archivo se queda donde está (no se borra, es decisión del usuario tenerlo),
-// simplemente `app.js` no lo referencia. Si el equipo igual quiere la broma,
-// que sea algo privado entre ustedes, no parte del sitio desplegado.
-// Fabrizio queda sin `photo` a propósito (ver nota arriba) hasta que se suba una
-// foto real de él y Claude la verifique — no apuntar a Imagenes/Fabrizio.jpg aquí
-// sin haber abierto el archivo primero, ya pasó dos veces que no era una foto real.
+// que cualquiera con el link puede ver y que Vercel redespliega automático.
+// Fabrizio queda sin `photo` a propósito hasta que se suba una foto REAL de él
+// y Claude la verifique abriéndola primero — no apuntar a "Fabrizio.jpg" aquí
+// a ciegas, ya pasó dos veces que no era una foto real.
+// Orden alfabético a pedido del usuario.
 const TEAM = [
-  { name: "Fernando", initial: "F", color: PALETTE.blue, photo: "Imagenes/Fernando.jpg" },
+  { name: "Cristian", initial: "C", color: PALETTE.yellow, photo: "Cristian.jpg" },
+  { name: "Diego", initial: "D", color: "#7C6CD6", photo: "Diego.jpg" },
   { name: "Fabrizio", initial: "F", color: PALETTE.aqua, photo: null },
-  { name: "Cristian", initial: "C", color: PALETTE.yellow, photo: "Imagenes/Cristian.jpg" },
-  { name: "Diego", initial: "D", color: "#7C6CD6", photo: "Imagenes/Diego.jpg" },
+  { name: "Fernando", initial: "F", color: PALETTE.blue, photo: "Fernando.jpg" },
 ];
 
 function renderEquipo() {
@@ -500,7 +523,6 @@ function renderEquipo() {
     name.className = "team-name";
     name.textContent = m.name;
 
-    card.appendChild(img);
     card.appendChild(name);
     grid.appendChild(card);
   });
@@ -539,8 +561,29 @@ async function refresh() {
   btn.disabled = true;
   btn.textContent = "↻ Actualizando…";
 
+  // Dos try/catch separados a propósito: si falla la descarga de datos, es un
+  // problema de red/API ("SIN CONEXIÓN"). Si la descarga funciona pero algo
+  // revienta al dibujar la página (un bug de JS en algún render*()), es un
+  // error distinto — antes ambos casos se mostraban igual como "SIN CONEXIÓN",
+  // lo cual era engañoso: la key/el Sheet podían estar perfectamente
+  // accesibles y aun así se veía como un problema de conexión.
+  let data;
   try {
-    const data = await fetchAllSheets();
+    data = await fetchAllSheets();
+  } catch (err) {
+    console.error("Fallo al leer el Sheet (red/API):", err);
+    dot.classList.add("error");
+    badge.classList.add("stale");
+    badge.textContent = "SIN CONEXIÓN";
+    document.getElementById("lastUpdated").textContent =
+      "No se pudo contactar la API de Google Sheets. Mostrando los últimos datos disponibles.";
+    btn.disabled = false;
+    btn.textContent = "↻ Actualizar ahora";
+    isLoading = false;
+    return;
+  }
+
+  try {
     state.impresiones = dropBlankRows(data.impresiones, 1); // Número de serie
     state.filamento = dropBlankRows(data.filamento, 1); // ID Rollo
     state.control = data.control; // ya se filtra por r[0] donde se usa
@@ -555,12 +598,13 @@ async function refresh() {
     document.getElementById("lastUpdated").textContent =
       "Actualizado " + new Date().toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   } catch (err) {
-    console.error("Fallo al leer el Sheet:", err);
+    // Los datos SÍ se descargaron — esto es un bug al dibujar, no de conexión.
+    console.error("Los datos se descargaron bien, pero falló el renderizado:", err);
     dot.classList.add("error");
     badge.classList.add("stale");
-    badge.textContent = "SIN CONEXIÓN";
+    badge.textContent = "ERROR AL MOSTRAR";
     document.getElementById("lastUpdated").textContent =
-      "No se pudo actualizar (uplink inestable). Mostrando los últimos datos disponibles.";
+      "Los datos se leyeron bien pero algo falló al dibujar la página (ver consola del navegador, F12).";
   } finally {
     btn.disabled = false;
     btn.textContent = "↻ Actualizar ahora";
