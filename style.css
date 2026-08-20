@@ -13,17 +13,19 @@
   --yellow: #EDA100;
   --bad: #E4544D;
 
-  --bg: #0A0E14;
-  --bg-panel: #0F1620;
-  --card-fill: #141C29;
-  --card-fill-2: #182335;
-  --border: #223047;
+  /* Fondo navy a pedido del usuario (2026-08-19), resto de la paleta
+     reajustada a partir de ese azul para mantener contraste/legibilidad. */
+  --bg: #003366;
+  --bg-panel: #002850;
+  --card-fill: #0B4A82;
+  --card-fill-2: #0F5A9C;
+  --border: #1F5C94;
 
-  --ink: #EEF1F5;
-  --ink-2: #AEB7C4;
-  --muted: #6E7A8C;
-  --grid: #1E2A3B;
-  --axis: #2B3A4F;
+  --ink: #F3F6FB;
+  --ink-2: #BCD0E6;
+  --muted: #82A0C4;
+  --grid: #0F4C84;
+  --axis: #1C5C98;
 }
 
 * { box-sizing: border-box; }
@@ -33,7 +35,7 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, sans-serif;
   min-height: 100%;
 }
 
@@ -45,7 +47,7 @@ body {
 }
 
 h1, h2, h3, .brand-text h1 {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', sans-serif;
   letter-spacing: 0.01em;
 }
 
@@ -338,6 +340,19 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px; position: relative; z-i
   border-radius: 999px;
 }
 .chart-wrap { position: relative; height: 300px; }
+.chart-wrap-tall { height: 480px; }
+
+.analysis-block {
+  background: var(--card-fill);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--aqua);
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+.analysis-block h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.analysis-text { margin: 0; font-size: 14px; line-height: 1.65; color: var(--ink-2); }
+.table-caption { margin-top: 12px; }
 
 /* ---------------------------------- tables ---------------------------------- */
 
@@ -395,7 +410,7 @@ tbody tr:last-child td { border-bottom: none; }
   margin-bottom: 14px;
 }
 .sku-example-code {
-  font-family: 'Space Grotesk', monospace;
+  font-family: 'Bricolage Grotesque', monospace;
   font-size: 18px;
   font-weight: 700;
   color: var(--yellow);
@@ -445,7 +460,7 @@ tbody tr:last-child td { border-bottom: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Bricolage Grotesque', sans-serif;
   font-size: 26px;
   font-weight: 700;
   color: #fff;
