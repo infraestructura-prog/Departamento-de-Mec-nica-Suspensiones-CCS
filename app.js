@@ -20,6 +20,10 @@ const CONFIG = {
     ensamblaje: "'Inventario Ensamblaje'!A3:E",
     historial: "'Historial Impresoras'!A2:H",
   },
+  // Sheet aparte (spreadsheet distinto) del estudio de caudal/ventiladores —
+  // agregado 2026-08-19 para la pestaña "Análisis de Datos".
+  ANALISIS_SPREADSHEET_ID: "1Wwn8-abBiuTHG_CIN8tMJ0dOBUqHNcJJ4J2BukHID7k",
+  ANALISIS_RANGE: "Caudal!A6:M26",
 };
 
 // Tarifa de costo por gramo, igual a la que usa el puente Apps Script
@@ -45,6 +49,7 @@ const state = {
   control: [],
   ensamblaje: [],
   historial: [],
+  analisis: [], // estudio de caudal/ventiladores (spreadsheet aparte)
   filters: { tipoFilamento: "", material: "", materialHistorial: "" },
   charts: {}, // nombre -> instancia Chart.js activa (se destruyen antes de recrear)
 };
@@ -54,6 +59,17 @@ const state = {
 function parseNum(v) {
   if (v === undefined || v === null || v === "") return 0;
   const cleaned = String(v).replace(/[^0-9.\-]/g, "");
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
+// El Sheet de análisis CFM usa coma como separador decimal ("63,56"), a
+// diferencia del Sheet de inventario (punto, "530.00") — parser aparte para
+// no romper parseNum() en el resto de la página. Verificado 2026-08-19: no usa
+// punto de miles, solo coma decimal, así que basta reemplazar la primera coma.
+function parseNumEs(v) {
+  if (v === undefined || v === null || v === "") return 0;
+  const cleaned = String(v).replace(",", ".").replace(/[^0-9.\-]/g, "");
   const n = parseFloat(cleaned);
   return isNaN(n) ? 0 : n;
 }
@@ -95,6 +111,22 @@ function uniqueSorted(arr) {
   return [...new Set(arr.filter((v) => v !== undefined && v !== null && v !== ""))].sort((a, b) => a.localeCompare(b, "es"));
 }
 
+// El Sheet de análisis usa celdas combinadas (Ventilador/Condición/Disposición/
+// Tipo de Filtro se escriben una sola vez y se "combinan" visualmente hacia
+// abajo) — la API los devuelve en blanco en las filas de continuación. Se
+// rellenan hacia abajo con el último valor no vacío visto en cada columna.
+function forwardFill(rows, cols) {
+  const last = {};
+  return rows.map((r) => {
+    const filled = r.slice();
+    cols.forEach((c) => {
+      if (filled[c]) last[c] = filled[c];
+      else if (last[c] !== undefined) filled[c] = last[c];
+    });
+    return filled;
+  });
+}
+
 // ----------------------------------------------------------------- fetch ----
 
 async function fetchAllSheets() {
@@ -120,6 +152,21 @@ async function fetchAllSheets() {
     out[keys[i]] = vr.values || [];
   });
   return out;
+}
+
+// Sheet aparte (spreadsheet distinto) — se pide por separado porque
+// values:batchGet solo admite rangos dentro de UN spreadsheet a la vez.
+async function fetchAnalisisSheet() {
+  const url =
+    `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.ANALISIS_SPREADSHEET_ID}/values/` +
+    `${encodeURIComponent(CONFIG.ANALISIS_RANGE)}?key=${CONFIG.API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Google Sheets API (análisis) respondió ${res.status}: ${body.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  return data.values || [];
 }
 
 // ---------------------------------------------------------------- render ----
@@ -168,14 +215,19 @@ function makeChart(canvasId, config) {
   state.charts[canvasId] = new Chart(ctx, config);
 }
 
-// Construye el gráfico "Disponible (g) por material" — una sola función usada
-// tanto en Inicio como en Filamento para que sean IDÉNTICOS (antes divergían:
-// uno tenía etiquetas y resaltado, el otro no, lo cual se veía inconsistente
-// entre pestañas para el mismo dato). También corrige que las etiquetas de
-// barras negativas quedaban mal ancladas (anchor/align fijos en "end"/"top"
-// asumían solo barras positivas) y agrega una línea de referencia en cero más
-// marcada, para que un "Disponible" negativo se lea claramente como "por
-// debajo de cero" y no como un gráfico roto.
+// Construye el gráfico "Filamento consumido (g) por material" — una sola
+// función usada tanto en Inicio como en Filamento para que sean IDÉNTICOS.
+//
+// Cambio 2026-08-19: antes graficaba "Disponible (g)", que podía salir
+// negativo (desfase de registro, ver banner de la sección Filamento) y el
+// usuario lo consideró que "no tiene sentido" como gráfico — una barra que
+// cuelga por debajo de cero se lee como algo roto, no como un dato útil. Se
+// reemplazó por "Consumido Total (g)" (columna C de Control de Filamento),
+// que nunca es negativo por definición, y sigue siendo la misma dimensión de
+// filtro (Material) así que el resaltado del material seleccionado se
+// mantiene igual. El "Disponible" (con su posible negativo) se conserva en
+// las tarjetas KPI de texto, donde un número en rojo comunica el déficit sin
+// el problema visual de una barra invertida.
 function buildFilamentChartConfig(materiales, highlight = "") {
   return {
     type: "bar",
@@ -183,8 +235,8 @@ function buildFilamentChartConfig(materiales, highlight = "") {
       labels: materiales.map((r) => r[0]),
       datasets: [
         {
-          data: materiales.map((r) => parseNum(r[3])),
-          backgroundColor: materiales.map((r) => (parseNum(r[3]) < 0 ? PALETTE.bad : PALETTE.aqua)),
+          data: materiales.map((r) => parseNum(r[2])),
+          backgroundColor: PALETTE.blue,
           borderColor: materiales.map((r) => (r[0] === highlight ? PALETTE.yellow : "transparent")),
           borderWidth: materiales.map((r) => (r[0] === highlight ? 3 : 0)),
           borderRadius: 4,
@@ -194,29 +246,7 @@ function buildFilamentChartConfig(materiales, highlight = "") {
     options: baseChartOptions({
       plugins: {
         legend: { display: false },
-        datalabels: {
-          color: PALETTE.ink2,
-          font: { size: 10 },
-          formatter: (v) => fmtNum(v),
-          // ancla/alinea según el signo: una barra negativa cuelga hacia abajo
-          // desde el cero, así que su etiqueta va debajo, no arriba.
-          anchor: (ctx) => (ctx.dataset.data[ctx.dataIndex] < 0 ? "start" : "end"),
-          align: (ctx) => (ctx.dataset.data[ctx.dataIndex] < 0 ? "bottom" : "top"),
-        },
-      },
-      scales: {
-        x: { grid: { color: PALETTE.grid }, ticks: { color: PALETTE.muted, font: { size: 10.5 } } },
-        y: {
-          ticks: { color: PALETTE.muted, font: { size: 10.5 } },
-          beginAtZero: true,
-          grid: {
-            // línea de cero más visible que el resto de la grilla, para que
-            // las barras negativas se lean como "cruzan el cero", no como un
-            // error visual.
-            color: (c) => (c.tick && c.tick.value === 0 ? PALETTE.axis : PALETTE.grid),
-            lineWidth: (c) => (c.tick && c.tick.value === 0 ? 2 : 1),
-          },
-        },
+        datalabels: { color: PALETTE.ink2, font: { size: 10 }, formatter: (v) => fmtNum(v), anchor: "end", align: "top" },
       },
     }),
   };
@@ -442,6 +472,130 @@ function renderHistorial() {
   );
 }
 
+// ------------------------------------------------- sección Análisis de Datos ----
+
+// Columnas reales del Sheet "Cálculo de Caudal Con Túnel de Viento" (verificadas
+// fila por fila 2026-08-19, ver Inventario/MEMORY.md — la columna A del Sheet
+// está vacía como margen decorativo, así que todo arranca en índice 1):
+// 0 (vacío), 1 Ventilador, 2 Condición, 3 Disposición del Filtro,
+// 4 Tipo de Filtro, 5 Velocidad del Ventilador, 6 Área [mm^2],
+// 7 Vel. Salida [mm/s], 8 Vel. Entrada [mm/s], 9 Caudal [mm^3/s],
+// 10 Caudal [CFM], 11 Presión [Pa], 12 Pérdida Porcentual.
+
+function analisisConfigLabel(r) {
+  return r[2] === "Sin Filtro" ? "Sin filtro" : `${r[3]} · ${r[4]}`;
+}
+function analisisComboLabel(r) {
+  return `${analisisConfigLabel(r)} · ${r[5]}`;
+}
+// Azul = caso base sin filtro. Rojo = "a la salida" (el estudio encontró
+// bloqueo total ahí). Aqua = "a la entrada" (el caudal se conserva). Refuerza
+// visualmente el hallazgo central del párrafo de análisis.
+function analisisComboColor(r) {
+  if (r[2] === "Sin Filtro") return PALETTE.blue;
+  return r[3] === "A la Salida" ? PALETTE.bad : PALETTE.aqua;
+}
+
+// Análisis escrito a mano a partir de los números reales del Sheet (no
+// autogenerado) — igual que la Guía SKU, es contenido verificado, no en vivo.
+// Si el equipo agrega mediciones nuevas al estudio, revisar que este texto
+// siga siendo cierto antes de dejarlo tal cual.
+const ANALISIS_TEXTO =
+  "El estudio comparó el ventilador Rui Zhan bajo cinco condiciones de filtrado " +
+  "— sin filtro, Filtro de Carro, Tul, Nylon y Tul+Nylon combinado — cada una en " +
+  "dos posiciones (a la entrada y a la salida del ventilador) y dos velocidades " +
+  "(100% y 70%). El hallazgo más claro en la columna Caudal [CFM] es que la " +
+  "posición del filtro pesa muchísimo más que el material: con Tul, Nylon o " +
+  "Tul+Nylon colocados A LA SALIDA, el caudal cae a 0 CFM (100% de pérdida) en " +
+  "ambas velocidades — bloqueo total, sin importar cuál de los tres se use. Los " +
+  "mismos filtros A LA ENTRADA cambian el panorama por completo: Nylon a la " +
+  "entrada llega a 56,69 CFM al 100% (solo 11% de pérdida frente a los 63,56 CFM " +
+  "sin filtro) y a 45,52 CFM al 70% (apenas 2% de pérdida frente a los 46,38 CFM " +
+  "base) — prácticamente el mismo caudal que sin filtrar. Tul+Nylon combinado a " +
+  "la entrada rinde de forma casi idéntica (57,12 CFM y 45,95 CFM), lo que " +
+  "sugiere que se puede sumar una capa extra de filtrado sin sacrificar caudal, " +
+  "siempre que se instale del lado correcto. El Filtro de Carro — el único " +
+  "material más rígido probado en ambas posiciones — muestra un patrón más " +
+  "gradual (25% de pérdida a la entrada, 41% a la salida, ambos al 100%): sigue " +
+  "favoreciendo la entrada, pero sin el bloqueo total de las mallas. El " +
+  "ventilador Artic no arrojó ninguna lectura de caudal en sus dos intentos " +
+  "(0 CFM ambas veces) — no hay datos suficientes para incluirlo en esta " +
+  "comparación; antes de descartarlo conviene repetir su medición.";
+
+function renderAnalisis() {
+  const filled = forwardFill(state.analisis, [1, 2, 3, 4]);
+  // Solo filas de medición real: tienen "100%"/"70%" en Velocidad. Esto excluye
+  // las 2 filas del ventilador "Artic" (sin lectura) y las notas de metodología
+  // al final de la hoja (ninguna de las dos trae velocidad).
+  const filas = filled.filter((r) => r[5] && r[5].includes("%"));
+
+  if (!filas.length) {
+    document.getElementById("kpiAnalisis").innerHTML = "";
+    document.getElementById("analisisTexto").textContent =
+      "No se pudieron leer datos del estudio de caudal en este momento.";
+    renderTable("tablaAnalisis", ["Sin datos"], []);
+    return;
+  }
+
+  const sinFiltro = filas.filter((r) => r[2] === "Sin Filtro");
+  const conFiltro = filas.filter((r) => r[2] !== "Sin Filtro");
+  const cfmMax = Math.max(...sinFiltro.map((r) => parseNumEs(r[10])));
+  const mejorFiltrada = conFiltro.reduce((best, r) => (parseNumEs(r[10]) > parseNumEs(best[10]) ? r : best), conFiltro[0]);
+  const bloqueadas = conFiltro.filter((r) => parseNumEs(r[10]) < 0.01).length;
+
+  const perdidaProm = (disposicion) => {
+    const vals = conFiltro.filter((r) => r[3] === disposicion && r[12] && r[12].includes("%")).map((r) => parseNumEs(r[12]));
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  };
+  const perdidaSalida = perdidaProm("A la Salida");
+  const perdidaEntrada = perdidaProm("A la Entrada");
+
+  document.getElementById("kpiAnalisis").innerHTML = [
+    kpiCard("Caudal máx. (sin filtro)", fmtNum(cfmMax, 2) + " CFM", { accent: PALETTE.blue }),
+    kpiCard("Mejor combinación filtrada", fmtNum(parseNumEs(mejorFiltrada[10]), 2) + " CFM", {
+      accent: PALETTE.aqua,
+      sub: analisisComboLabel(mejorFiltrada),
+    }),
+    kpiCard("Configuraciones bloqueadas", fmtNum(bloqueadas), {
+      accent: PALETTE.bad,
+      bad: bloqueadas > 0,
+      sub: "Caudal ≈ 0 CFM",
+    }),
+    kpiCard("Pérdida prom. — Salida", perdidaSalida === null ? "—" : fmtNum(perdidaSalida) + "%", { accent: PALETTE.bad }),
+    kpiCard("Pérdida prom. — Entrada", perdidaEntrada === null ? "—" : fmtNum(perdidaEntrada) + "%", { accent: PALETTE.aqua }),
+  ].join("");
+
+  const ordenadas = [...filas].sort((a, b) => parseNumEs(b[10]) - parseNumEs(a[10]));
+  makeChart("chartAnalisisCfm", {
+    type: "bar",
+    data: {
+      labels: ordenadas.map((r) => analisisComboLabel(r)),
+      datasets: [{ data: ordenadas.map((r) => parseNumEs(r[10])), backgroundColor: ordenadas.map((r) => analisisComboColor(r)), borderRadius: 4 }],
+    },
+    options: baseChartOptions({
+      indexAxis: "y",
+      plugins: {
+        legend: { display: false },
+        datalabels: { color: PALETTE.ink2, font: { size: 10 }, formatter: (v) => fmtNum(v, 1), anchor: "end", align: "end" },
+      },
+    }),
+  });
+
+  document.getElementById("analisisTexto").textContent = ANALISIS_TEXTO;
+
+  renderTable(
+    "tablaAnalisis",
+    ["Configuración", "Velocidad", "Caudal [CFM]", "Presión [Pa]", "Pérdida"],
+    ordenadas.map((r) => [
+      esc(analisisConfigLabel(r)),
+      esc(r[5]),
+      fmtNum(parseNumEs(r[10]), 2),
+      fmtNum(parseNumEs(r[11]), 2),
+      r[12] && r[12].includes("%") ? esc(r[12]) : "—",
+    ])
+  );
+}
+
 // --------------------------------------------------------- sección Guía SKU (estática) ----
 
 const SKU_GUIDE = [
@@ -490,7 +644,7 @@ const TEAM = [
   { name: "Cristian", initial: "C", color: PALETTE.yellow, photo: "Cristian.jpg" },
   { name: "Diego", initial: "D", color: "#7C6CD6", photo: "Diego.jpg" },
   { name: "Fabrizio", initial: "F", color: PALETTE.aqua, photo: null },
-  { name: "Fernando", initial: "F", color: PALETTE.blue, photo: "Fernando.jpg" },
+  { name: "Fernando", initial: "F", color: PALETTE.blue, photo: "Fernando G.jpg" },
 ];
 
 function renderEquipo() {
@@ -544,6 +698,7 @@ function renderAll() {
   renderFilamento();
   renderEnsamblaje();
   renderHistorial();
+  renderAnalisis();
   renderSku();
   renderEquipo();
 }
@@ -567,11 +722,13 @@ async function refresh() {
   // error distinto — antes ambos casos se mostraban igual como "SIN CONEXIÓN",
   // lo cual era engañoso: la key/el Sheet podían estar perfectamente
   // accesibles y aun así se veía como un problema de conexión.
-  let data;
-  try {
-    data = await fetchAllSheets();
-  } catch (err) {
-    console.error("Fallo al leer el Sheet (red/API):", err);
+  // El Sheet de inventario es crítico (si falla, se marca SIN CONEXIÓN). El
+  // Sheet de análisis (spreadsheet aparte) es secundario: si falla, se registra
+  // en consola y esa pestaña conserva sus últimos datos, sin tumbar el resto.
+  const [invResult, analisisResult] = await Promise.allSettled([fetchAllSheets(), fetchAnalisisSheet()]);
+
+  if (invResult.status === "rejected") {
+    console.error("Fallo al leer el Sheet (red/API):", invResult.reason);
     dot.classList.add("error");
     badge.classList.add("stale");
     badge.textContent = "SIN CONEXIÓN";
@@ -581,6 +738,12 @@ async function refresh() {
     btn.textContent = "↻ Actualizar ahora";
     isLoading = false;
     return;
+  }
+  const data = invResult.value;
+  if (analisisResult.status === "fulfilled") {
+    state.analisis = analisisResult.value;
+  } else {
+    console.error("Fallo al leer el Sheet de análisis CFM (no crítico):", analisisResult.reason);
   }
 
   try {
