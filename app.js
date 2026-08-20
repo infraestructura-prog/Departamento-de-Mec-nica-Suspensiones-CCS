@@ -643,7 +643,7 @@ const SKU_GUIDE = [
 const TEAM = [
   { name: "Cristian", initial: "C", color: PALETTE.yellow, photo: "Cristian.jpg" },
   { name: "Diego", initial: "D", color: "#7C6CD6", photo: "Diego.jpg" },
-  { name: "Fabrizio", initial: "F", color: PALETTE.aqua, photo: null },
+  { name: "Fabrizio", initial: "F", color: PALETTE.aqua, photo: "Fabrizio.jpg" },
   { name: "Fernando", initial: "F", color: PALETTE.blue, photo: "Fernando G.jpg" },
 ];
 
