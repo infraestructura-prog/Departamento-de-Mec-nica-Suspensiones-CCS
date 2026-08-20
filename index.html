@@ -7,7 +7,7 @@
 <meta name="description" content="Panel en vivo del inventario de piezas impresas en 3D, filamento, ensamblaje e historial de impresión del Departamento de Mecánica.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -38,6 +38,7 @@
   <button class="tab-btn" data-tab="filamento">Filamento</button>
   <button class="tab-btn" data-tab="ensamblaje">Ensamblaje</button>
   <button class="tab-btn" data-tab="historial">Historial Impresoras</button>
+  <button class="tab-btn" data-tab="analisis">Análisis de Datos</button>
   <button class="tab-btn" data-tab="sku">Guía SKU</button>
   <button class="tab-btn" data-tab="equipo">Equipo</button>
 </nav>
@@ -64,7 +65,7 @@
     </div>
     <div class="kpi-row" id="kpiInicio"></div>
     <div class="chart-card wide">
-      <h3>Filamento disponible por material</h3>
+      <h3>Filamento consumido por material</h3>
       <div class="chart-wrap"><canvas id="chartInicioFilamento"></canvas></div>
     </div>
   </section>
@@ -115,7 +116,7 @@
     </div>
     <div class="kpi-row" id="kpiFilamento"></div>
     <div class="chart-card wide">
-      <h3>Disponible (g) por material <span class="static-tag">vista fija</span></h3>
+      <h3>Consumido (g) por material <span class="static-tag">vista fija</span></h3>
       <div class="chart-wrap"><canvas id="chartFilamentoDisponible"></canvas></div>
     </div>
     <div class="table-card">
@@ -156,6 +157,36 @@
     <div class="table-card">
       <h3>Registro de trabajos (más reciente primero)</h3>
       <div class="table-scroll"><table id="tablaHistorial"></table></div>
+    </div>
+  </section>
+
+  <!-- ================= ANÁLISIS DE DATOS ================= -->
+  <section class="tab-panel" id="panel-analisis">
+    <div class="section-head">
+      <h2>Análisis de Datos — Estudio de Caudal (Túnel de Viento)</h2>
+      <p class="section-sub">
+        Fuente: Sheet aparte «Cálculo de Caudal Con Túnel de Viento», estudio propio del
+        departamento comparando ventiladores y filtros. Se lee en vivo igual que el resto de
+        la página.
+      </p>
+    </div>
+    <div class="kpi-row" id="kpiAnalisis"></div>
+    <div class="chart-card wide">
+      <h3>Caudal [CFM] por configuración probada</h3>
+      <div class="chart-wrap chart-wrap-tall"><canvas id="chartAnalisisCfm"></canvas></div>
+    </div>
+    <div class="analysis-block">
+      <h3>Análisis — columna Caudal [CFM]</h3>
+      <p id="analisisTexto" class="analysis-text">Cargando análisis…</p>
+    </div>
+    <div class="table-card">
+      <h3>Datos completos del estudio</h3>
+      <div class="table-scroll"><table id="tablaAnalisis"></table></div>
+      <p class="section-sub table-caption">
+        No se incluyen aquí las 2 filas del ventilador "Artic" (no arrojó lectura de caudal
+        en ninguna prueba) ni las notas de metodología de la hoja original — ver el análisis
+        arriba para el detalle.
+      </p>
     </div>
   </section>
 
