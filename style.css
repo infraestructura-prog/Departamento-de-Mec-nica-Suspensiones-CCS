@@ -13,19 +13,20 @@
   --yellow: #EDA100;
   --bad: #E4544D;
 
-  /* Fondo navy a pedido del usuario (2026-08-19), resto de la paleta
-     reajustada a partir de ese azul para mantener contraste/legibilidad. */
-  --bg: #003366;
-  --bg-panel: #002850;
-  --card-fill: #0B4A82;
-  --card-fill-2: #0F5A9C;
-  --border: #1F5C94;
+  /* Fondo índigo profundo a pedido del usuario (2026-08-19, reemplaza el navy
+     #003366 que se probó antes y no gustó por "muy usado") — resto de la
+     paleta reajustada a partir de este morado oscuro. */
+  --bg: #14122C;
+  --bg-panel: #0F0D22;
+  --card-fill: #221F42;
+  --card-fill-2: #2C2952;
+  --border: #3B3768;
 
-  --ink: #F3F6FB;
-  --ink-2: #BCD0E6;
-  --muted: #82A0C4;
-  --grid: #0F4C84;
-  --axis: #1C5C98;
+  --ink: #F4F3FA;
+  --ink-2: #C6C2E0;
+  --muted: #8D87B8;
+  --grid: #221F42;
+  --axis: #3B3768;
 }
 
 * { box-sizing: border-box; }
