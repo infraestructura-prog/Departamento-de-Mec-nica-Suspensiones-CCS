@@ -254,10 +254,11 @@
         </div>
       </div>
       <p class="section-sub" style="margin-top:10px;">
-        ⚠️ El estado inicial (antes de resolver) no queda guardado como cuadro
-        navegable, y el patrón visual se estabiliza rápido — entre la
-        iteración 100 y la 600 el cambio es sutil a simple vista, aunque el
-        residual del solver siga bajando de fondo.
+        120 cuadros, uno cada 5 iteraciones. ⚠️ El estado inicial (antes de
+        resolver) no queda guardado como cuadro navegable — el primero
+        disponible es la iteración 5. El cambio es más visible en los
+        primeros ~100 cuadros; después el patrón se estabiliza y solo
+        refina detalles finos.
       </p>
     </div>
 
@@ -389,7 +390,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
 (function () {
-  var FRAMES = [100, 200, 300, 400, 500, 600];
+  var FRAMES = [];
+  for (var fi = 5; fi <= 600; fi += 5) FRAMES.push(fi);
   var idx = 0;
   var playing = false;
   var timer = null;
@@ -427,7 +429,7 @@
     timer = setInterval(function () {
       idx = (idx + 1) % FRAMES.length;
       render();
-    }, 700);
+    }, 120);
   });
   render();
 })();
