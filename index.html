@@ -141,21 +141,35 @@
     </div>
   </section>
 
-  <!-- ================= HISTORIAL ================= -->
+<!-- ================= HISTORIAL ================= -->
   <section class="tab-panel" id="panel-historial">
     <div class="section-head">
       <h2>Historial de impresoras</h2>
       <p class="section-sub">Fuente: pestaña «Historial Impresoras» (registro automático desde Bambu Cloud).</p>
     </div>
+    
     <div class="filter-bar">
       <label for="filterMaterialHistorial">Filtro — Material impreso:</label>
       <select id="filterMaterialHistorial"><option value="">(Todos)</option></select>
     </div>
+    
     <div class="kpi-row" id="kpiHistorial"></div>
+
+    <!-- NUEVO GRÁFICO: Gasto semanal por tipo de filamento -->
+    <div class="chart-card wide">
+      <h3>Gramos consumidos por semana según material <span class="static-tag">vista apilada</span></h3>
+      <p class="section-sub" style="margin-bottom:14px;">
+        Estadística consolidada para evaluar qué tipo de filamento (PLA, PETG, ASA, etc.) se gasta más semana a semana en los componentes.
+      </p>
+      <div class="chart-wrap"><canvas id="chartHistorialSemanal"></canvas></div>
+    </div>
+
+    <!-- Gráfico existente de tendencia diaria -->
     <div class="chart-card wide">
       <h3>Gramos consumidos por día <span class="static-tag">vista fija</span></h3>
       <div class="chart-wrap"><canvas id="chartHistorialTrend"></canvas></div>
     </div>
+
     <div class="table-card">
       <h3>Registro de trabajos (más reciente primero)</h3>
       <div class="table-scroll"><table id="tablaHistorial"></table></div>
