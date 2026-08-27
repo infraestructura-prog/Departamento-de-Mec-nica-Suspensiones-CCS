@@ -96,6 +96,18 @@ function fmtMoney(n) {
   return "$" + fmtNum(n, 2);
 }
 
+// Función auxiliar para obtener el Lunes de la semana correspondiente
+function getInicioSemana(fechaStr) {
+  if (!fechaStr) return "(sin fecha)";
+  // Añadimos T00:00:00 para evitar saltos de día por zona horaria
+  const d = new Date(fechaStr.includes('T') ? fechaStr : fechaStr + "T00:00:00");
+  if (isNaN(d.getTime())) return fechaStr; // Si la celda tiene texto raro, devuelve el texto
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Ajusta al Lunes
+  const lunes = new Date(d.setDate(diff));
+  return lunes.toISOString().split('T')[0];
+}
+
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -438,6 +450,58 @@ function renderHistorial() {
     kpiCard("Gramos consumidos", fmtNum(gramosTotal) + " g", { accent: PALETTE.yellow }),
     kpiCard("Horas de impresión", fmtNum(minutosTotal / 60, 1) + " h", { accent: PALETTE.aqua }),
   ].join("");
+
+  // >>> INICIO GRÁFICO SEMANAL APILADO <<<
+  const porSemana = {};
+  const materialesVistos = new Set();
+
+  // 1. Agrupar la cantidad (gramos) por cada inicio de semana y por cada material
+  state.historial.forEach((r) => {
+    const dia = r[2] || "";
+    const semana = getInicioSemana(dia);
+    const mat = r[6] || "(Sin material)";
+    const gramos = parseNum(r[3]);
+
+    if (!porSemana[semana]) porSemana[semana] = {};
+    porSemana[semana][mat] = (porSemana[semana][mat] || 0) + gramos;
+    materialesVistos.add(mat);
+  });
+
+  // 2. Ordenar las semanas cronológicamente
+  const semanasSort = Object.keys(porSemana).sort();
+  const matsArray = Array.from(materialesVistos).sort();
+
+  // 3. Crear los bloques (datasets) por cada material encontrado
+  const colorList = [PALETTE.blue, PALETTE.bad, PALETTE.yellow, PALETTE.aqua, "#7C6CD6", "#1BAF7A"];
+  const datasetsSemanal = matsArray.map((mat, i) => ({
+    label: mat,
+    data: semanasSort.map(w => porSemana[w][mat] || 0),
+    backgroundColor: colorList[i % colorList.length],
+    borderRadius: 4
+  }));
+
+  // 4. Dibujar el gráfico integrándose con tu función base baseChartOptions
+  makeChart("chartHistorialSemanal", {
+    type: "bar",
+    data: {
+      labels: semanasSort,
+      datasets: datasetsSemanal
+    },
+    options: baseChartOptions({
+      plugins: {
+        legend: { 
+          display: true, 
+          position: 'top',
+          labels: { color: PALETTE.ink2, font: { size: 11 } }
+        }
+      },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true }
+      }
+    })
+  });
+  // >>> FIN GRÁFICO SEMANAL APILADO <<<
 
   // tendencia por día — vista fija, siempre con todo el histórico (no reacciona al filtro)
   const porDia = {};
