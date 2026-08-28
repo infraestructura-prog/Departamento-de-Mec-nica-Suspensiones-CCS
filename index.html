@@ -141,7 +141,7 @@
     </div>
   </section>
 
-<!-- ================= HISTORIAL ================= -->
+  <!-- ================= HISTORIAL ================= -->
   <section class="tab-panel" id="panel-historial">
     <div class="section-head">
       <h2>Historial de impresoras</h2>
@@ -155,7 +155,6 @@
     
     <div class="kpi-row" id="kpiHistorial"></div>
 
-    <!-- NUEVO GRÁFICO: Gasto semanal por tipo de filamento -->
     <div class="chart-card wide">
       <h3>Gramos consumidos por semana según material <span class="static-tag">vista apilada</span></h3>
       <p class="section-sub" style="margin-bottom:14px;">
@@ -164,7 +163,6 @@
       <div class="chart-wrap"><canvas id="chartHistorialSemanal"></canvas></div>
     </div>
 
-    <!-- Gráfico existente de tendencia diaria -->
     <div class="chart-card wide">
       <h3>Gramos consumidos por día <span class="static-tag">vista fija</span></h3>
       <div class="chart-wrap"><canvas id="chartHistorialTrend"></canvas></div>
@@ -382,6 +380,222 @@
         filtración.
       </p>
     </div>
+
+    <!-- ===== DOCUMENTO TÉCNICO INYECTADO AQUÍ ===== -->
+    
+    <div class="section-head" style="margin-top: 50px;">
+      <h2>Documento Técnico: Filtros para el NODOS</h2>
+      <p class="section-sub">Evaluación y diseño formal de la barrera de filtración física.</p>
+    </div>
+
+    <div class="analysis-block">
+      <h3>Objetivo del Sistema</h3>
+      <p class="analysis-text">
+        Diseñar una barrera de filtración física para un sistema de ventilación activa (configuración de Presión Positiva - "Push") destinado a proteger equipos electrónicos (estación de energía, baterías, antenas) en un entorno costero agresivo.
+      </p>
+      
+      <h3 style="margin-top: 16px;">El Reto Termodinámico</h3>
+      <p class="analysis-text">
+        Se dispone de un ventilador de presión estática capaz de inyectar <span class="cell-strong">80 CFM</span> de caudal en flujo libre. El sistema requiere un flujo mínimo efectivo de <span class="cell-strong">>45 CFM</span> para evitar el sobrecalentamiento de los componentes. El filtro debe detener polvo, arena y salitre, sin generar una caída de presión (asfixia) que comprometa este caudal vital.
+      </p>
+    </div>
+
+    <div class="table-card">
+      <h3>1. Análisis de la Amenaza Costera y Evaluación de Materiales</h3>
+      <p class="section-sub" style="margin-bottom:14px;">El entorno marino presenta un desafío dual: amenazas sólidas (arena gruesa y polvo fino) y amenazas líquidas/químicas (aerosol salino). El salitre no es un polvo seco, sino microgotas de agua altamente corrosivas que miden entre 0.1 µm y 10 µm. Una barrera ineficiente absorbe el agua, transmite la sal y asfixia el caudal térmico.</p>
+      
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo de Material</th>
+              <th>Tamaño de Poro</th>
+              <th>Eficiencia: Polvo Fino</th>
+              <th>Eficiencia: Salitre</th>
+              <th>Veredicto y Motivo de Decisión</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cell-strong">Tul de Mercería</td>
+              <td>500 - 2000 µm</td>
+              <td>0%</td>
+              <td>0%</td>
+              <td><span class="cell-bad">DESCARTADO.</span> Poro excesivamente grande. Solo sirve como barrera macroscópica (insectos/hojas).</td>
+            </tr>
+            <tr>
+              <td class="cell-strong">Nylon (Medias/Malla fina)</td>
+              <td>20 - 100 µm</td>
+              <td>15% - 20%</td>
+              <td>0%</td>
+              <td><span class="cell-bad">DESCARTADO.</span> Al ser hidrofílico y de una sola capa, la humedad y el polvo crean un "lodo" que sella los poros rápidamente, colapsando el flujo de aire (asfixia térmica).</td>
+            </tr>
+            <tr>
+              <td class="cell-strong">Filtro Sintético (Alto Flujo K&N)</td>
+              <td>10 - 20 µm</td>
+              <td>70%</td>
+              <td>5%</td>
+              <td><span class="cell-bad" style="color:var(--yellow)">NO RECOMENDADO ÚNICA ETAPA.</span> Excelente para el flujo de aire libre, pero su malla perforada no detiene partículas submicrónicas ni aerosoles líquidos.</td>
+            </tr>
+            <tr>
+              <td class="cell-strong">Membrana ePTFE (IP68)</td>
+              <td>0.02 - 0.2 µm</td>
+              <td>100%</td>
+              <td>100%</td>
+              <td><span class="cell-bad">INVIABLE PARA VENTILACIÓN MASIVA.</span> Bloqueo absoluto de líquidos y sólidos, pero los poros son tan minúsculos que actúan como una pared para un ventilador axial estándar.</td>
+            </tr>
+            <tr>
+              <td class="cell-strong">Manta Sintética (ISO Coarse G4)</td>
+              <td>Matriz 3D (Progresiva)</td>
+              <td>90% - 95%</td>
+              <td>10% - 20%</td>
+              <td><span class="cell-good" style="color:var(--blue)">OPCIÓN INDUSTRIAL VIABLE.</span> Atrapa suciedad en la profundidad del tejido sin taparse de golpe, pero requiere cambio frecuente en ambientes salinos.</td>
+            </tr>
+            <tr>
+              <td class="cell-strong">Filtro Cabina Automotriz (Carbón)</td>
+              <td>0.5 - 5 µm</td>
+              <td>95% - 99%</td>
+              <td>15% - 30%</td>
+              <td><span class="cell-good">LA MEJOR OPCIÓN DE NÚCLEO.</span> El papel sintético plisado multiplica el área de contacto hasta 5 veces. Retiene partículas microscópicas y el carbón activado mitiga gases corrosivos.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="info-banner danger">
+      <strong style="color: var(--bad);">El Problema de la Asfixia (Clogging):</strong> Materiales de uso doméstico como el Tul y el Nylon fueron evaluados en simulación, demostrando que ante la presencia de arena (sedimentos medios), la etapa de Nylon pierde el 85% de su permeabilidad en poco tiempo, reduciendo el caudal de aire a niveles críticos (&lt;10 CFM) y dejando pasar el vapor de salitre hacia los nodos.
+    </div>
+
+    <div class="table-card">
+      <h3>2. Impacto Termodinámico (Caudal vs. Restricción)</h3>
+      <p class="section-sub" style="margin-bottom:14px;">Toda barrera física genera resistencia al avance del aire (Caída de Presión Estática, medida en Pascales). La siguiente tabla demuestra cuánto de los 80 CFM originales logran entrar a la carcasa según el nivel restrictivo del filtro.</p>
+      
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Componente / Material</th>
+              <th>Resistencia Estimada</th>
+              <th>Caudal Efectivo Inyectado</th>
+              <th>Impacto en la Temperatura Interna</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sistema sin protección (Flujo Libre)</td>
+              <td>0 Pa</td>
+              <td>80 CFM (135 m³/h)</td>
+              <td>Máxima refrigeración, máxima exposición a fallas por corrosión.</td>
+            </tr>
+            <tr>
+              <td>Malla Coalescente Inox 316L</td>
+              <td>15 - 25 Pa</td>
+              <td class="cell-good" style="color:var(--blue);">65 - 70 CFM</td>
+              <td>Excelente. Permite ventilación alta y escurre la lluvia/salitre.</td>
+            </tr>
+            <tr>
+              <td>Filtro Automotriz (Diseño Plisado)</td>
+              <td>30 - 50 Pa</td>
+              <td class="cell-good">55 CFM</td>
+              <td><span class="cell-strong">Balance Óptimo.</span> Mantiene el flujo sobre la meta (>45 CFM).</td>
+            </tr>
+            <tr>
+              <td>Tapón de Membrana ePTFE (Gore)</td>
+              <td>> 300 Pa</td>
+              <td class="cell-bad">0 - 5 CFM</td>
+              <td>Falla térmica inminente. El ventilador no tiene fuerza para empujar el aire a través de la membrana.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-card wide">
+      <h3>3. Arquitectura Propuesta: Ensamblaje en 3 Niveles (Módulo 3D)</h3>
+      <p class="section-sub" style="margin-bottom:14px;">Basado en los datos técnicos, ningún material único cumple ambos requisitos (filtrado total + caudal masivo). La solución de ingeniería es distribuir la carga en tres etapas integradas en un chasis diseñado e impreso en 3D.</p>
+      
+      <div class="chart-wrap chart-wrap-tall" style="height:auto; text-align:center; padding:20px 0;">
+        <svg viewBox="0 0 900 480" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--blue)" />
+                </marker>
+                <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--aqua)" />
+                </marker>
+                <pattern id="zigzag" width="20" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M0,20 L10,0 L20,20 L10,40 Z" fill="none" stroke="var(--border)" stroke-width="3" />
+                </pattern>
+                <pattern id="mesh" width="10" height="10" patternUnits="userSpaceOnUse">
+                    <path d="M 10 0 L 0 10 M 0 0 L 10 10" fill="none" stroke="var(--muted)" stroke-width="1.5" />
+                </pattern>
+            </defs>
+
+            <!-- Airflow arrows in (Left) -->
+            <path d="M 40 240 L 150 240" stroke="var(--blue)" stroke-width="4" marker-end="url(#arrow)" />
+            <path d="M 40 330 L 150 240" stroke="var(--blue)" stroke-width="4" marker-end="url(#arrow)" opacity="0.5"/>
+            <path d="M 40 150 L 150 240" stroke="var(--blue)" stroke-width="4" marker-end="url(#arrow)" opacity="0.5"/>
+            <text x="25" y="280" font-family="'Plus Jakarta Sans', Arial" font-size="14" fill="var(--blue)" font-weight="bold" transform="rotate(-90 25,280)">BRISA EXTERIOR (Polvo + Salitre)</text>
+
+            <!-- Main Enclosure Frame -->
+            <rect x="170" y="110" width="350" height="20" fill="var(--card-fill-2)" rx="3" />
+            <rect x="170" y="350" width="350" height="20" fill="var(--card-fill-2)" rx="3" />
+
+            <!-- Stage 1: Louvers -->
+            <g stroke="var(--ink-2)" stroke-width="6" stroke-linecap="round">
+                <line x1="210" y1="140" x2="180" y2="180" />
+                <line x1="210" y1="200" x2="180" y2="240" />
+                <line x1="210" y1="260" x2="180" y2="300" />
+                <line x1="210" y1="320" x2="180" y2="350" />
+            </g>
+            <text x="170" y="400" font-family="'Plus Jakarta Sans', Arial" font-size="14" font-weight="bold" fill="var(--ink)">ETAPA 1 (Deflector)</text>
+            <text x="170" y="420" font-family="'Plus Jakarta Sans', Arial" font-size="12" fill="var(--muted)">Rejilla Louver a 45°</text>
+
+            <!-- Stage 2: Coalescent Inox Mesh -->
+            <rect x="280" y="130" width="30" height="220" fill="url(#mesh)" stroke="var(--muted)" stroke-width="2"/>
+            <!-- Droplets inside the mesh bounds -->
+            <path d="M 295 260 C 295 260, 303 272, 295 282 C 287 272, 295 260, 295 260" fill="var(--blue)" />
+            <path d="M 295 300 C 295 300, 300 308, 295 315 C 290 308, 295 300, 295 300" fill="var(--blue)" />
+            
+            <text x="295" y="40" font-family="'Plus Jakarta Sans', Arial" font-size="14" font-weight="bold" fill="var(--ink)" text-anchor="middle">ETAPA 2 (Coalescencia)</text>
+            <text x="295" y="60" font-family="'Plus Jakarta Sans', Arial" font-size="12" fill="var(--ink-2)" text-anchor="middle">Malla Inoxidable 316L</text>
+            <text x="295" y="78" font-family="'Plus Jakarta Sans', Arial" font-size="11" fill="var(--muted)" text-anchor="middle">Escurre humedad y salitre</text>
+
+            <!-- Stage 3: Auto Filter -->
+            <rect x="400" y="130" width="80" height="220" fill="url(#zigzag)" stroke="var(--border)" stroke-width="2"/>
+            <text x="400" y="400" font-family="'Plus Jakarta Sans', Arial" font-size="14" font-weight="bold" fill="var(--ink)">ETAPA 3 (Núcleo Fino)</text>
+            <text x="400" y="420" font-family="'Plus Jakarta Sans', Arial" font-size="12" fill="var(--muted)">Filtro Plisado Automotriz</text>
+
+            <!-- Internal Airflow (Dotted) -->
+            <path d="M 320 240 L 390 240" stroke="var(--blue)" stroke-width="3" opacity="0.6" stroke-dasharray="5,5" />
+
+            <!-- Clean Air Flow Arrow & Label (Middle Section) -->
+            <path d="M 500 240 L 640 240" stroke="var(--aqua)" stroke-width="6" marker-end="url(#arrow-green)" />
+            <text x="570" y="200" font-family="'Plus Jakarta Sans', Arial" font-size="18" fill="var(--aqua)" font-weight="bold" text-anchor="middle">55 CFM</text>
+            <text x="570" y="280" font-family="'Plus Jakarta Sans', Arial" font-size="13" fill="var(--aqua)" text-anchor="middle">Aire filtrado, seco y seguro</text>
+
+            <!-- Fan representation (Far Right) -->
+            <rect x="710" y="160" width="25" height="160" fill="var(--border)" rx="4" />
+            <rect x="690" y="200" width="20" height="80" fill="var(--muted)" rx="2" />
+            <text x="710" y="350" font-family="'Plus Jakarta Sans', Arial" font-size="12" font-weight="bold" fill="var(--ink)" text-anchor="middle">VENTILADOR AXIAL</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="analysis-block" style="border-left-color: var(--aqua);">
+      <h3>Conclusión y Recomendaciones Finales</h3>
+      <p class="analysis-text">A lo largo de nuestras simulaciones y evaluaciones, hemos comprobado que implementar telas caseras (tul/nylon) resulta contraproducente para el equipo, ya que bloquean el flujo térmico vital sin lograr detener la amenaza química más corrosiva del ambiente costero: el salitre. De igual manera, intentar colocar filtros ultradesarrollados (IP68) genera un muro estático que asfixia el ventilador.</p>
+      
+      <p class="analysis-text" style="margin-top: 14px;"><strong class="cell-strong">La estrategia definitiva para la carcasa es la sinergia mecánica:</strong></p>
+      <ul class="analysis-text">
+        <li>Utilizar una <strong style="color:var(--ink);">malla de acero inoxidable 316L (Grado Marino)</strong> como barrera coalescente frontal para forzar a las microgotas de agua salada a chocar, unirse (gotas pesadas) y escurrir por gravedad.</li>
+        <li>Inmediatamente detrás, colocar un <strong style="color:var(--ink);">filtro automotriz de cabina (con carbón activado)</strong>. Al recibir un aire ya libre de humedad líquida, este filtro plisado operará de manera óptima capturando el polvo fino y la arena sin humedecerse, permitiendo una entrega sostenida de <strong>~55 CFM</strong>.</li>
+      </ul>
+      
+      <p class="analysis-text" style="margin-top: 14px;"><strong class="cell-strong">Próximos pasos recomendados:</strong> Diseñar en software CAD (Fusion 360, SolidWorks, etc.) un cartucho tipo "gaveta" que permita ensamblar estas dos etapas (Inox + Automotriz). Posteriormente, fabricar el prototipo funcional con la impresora Bambu Lab utilizando filamentos resistentes a exteriores (PETG o ASA) para asegurar la integridad mecánica del módulo frente a la radiación UV e impactos.</p>
+    </div>
+
   </section>
 
   <!-- ================= EQUIPO ================= -->
