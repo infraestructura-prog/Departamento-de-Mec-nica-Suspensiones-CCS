@@ -42,6 +42,7 @@
   <button class="tab-btn" data-tab="nodos">NODOS</button>
   <button class="tab-btn" data-tab="filtros">Filtros</button>
   <button class="tab-btn" data-tab="sku">Guía SKU</button>
+  <button class="tab-btn" data-tab="piezas3d">Piezas 3D</button>
   <button class="tab-btn" data-tab="equipo">Equipo</button>
 </nav>
 
@@ -387,6 +388,31 @@
         evaluadas por el equipo. Es una simulación conceptual/educativa, no una
         medición real de eficiencia de filtración.
       </p>
+    </div>
+  </section>
+
+  <!-- ================= PIEZAS 3D ================= -->
+  <section class="tab-panel" id="panel-piezas3d">
+    <div class="section-head">
+      <h2>Visor 3D interactivo</h2>
+      <p class="section-sub">
+        Carga archivos STEP (exportados desde SolidWorks/Amagine3D) directo en el
+        navegador, sin backend ni conversión previa — arrastra para rotar, rueda del
+        mouse para zoom.
+        <span class="static-tag">contenido fijo — no se lee de un Sheet</span>
+      </p>
+    </div>
+
+    <div class="filtros-controls">
+      <div class="filtros-group">
+        <span class="filtros-group-label">Pieza:</span>
+        <select id="piezaSelect" class="filtros-select"></select>
+      </div>
+    </div>
+
+    <div class="chart-card wide">
+      <div id="viewer3dContainer" class="viewer3d-container"></div>
+      <p id="viewer3dStatus" class="filtros-fan-spec">Abre esta pestaña para cargar el modelo…</p>
     </div>
   </section>
 
@@ -953,6 +979,159 @@
 
   rebuildUI();
   requestAnimationFrame(loop);
+})();
+</script>
+<!-- ===== Visor 3D STEP (occt-import-js + Three.js) — ver NODOS/Documentacion/Integracion_Visor_Web_Inventario.md ===== -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.138.3/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/controls/OrbitControls.js"></script>
+<script type="text/javascript" src="occt-import-js.js"></script>
+<script>
+(function () {
+  // Piezas disponibles — agregar una más acá cuando haya otro .step subido
+  // (mismo nombre de archivo suelto en la raíz del repo, sin subcarpeta).
+  var PIEZAS_3D = [
+    { name: "EcoFlow River2 Max — ensamble (Amagine3D)", file: "river2max-assemble.step" }
+  ];
+
+  var loaded = false;
+  var occtPromise = null;
+  var loadToken = 0; // se incrementa en cada carga para descartar cargas viejas si se cambia de pieza rápido
+
+  function buildMesh3d(geometryMesh) {
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(geometryMesh.attributes.position.array, 3));
+    if (geometryMesh.attributes.normal) {
+      geometry.setAttribute("normal", new THREE.Float32BufferAttribute(geometryMesh.attributes.normal.array, 3));
+    }
+    var index = Uint32Array.from(geometryMesh.index.array);
+    geometry.setIndex(new THREE.BufferAttribute(index, 1));
+    var color = geometryMesh.color
+      ? new THREE.Color(geometryMesh.color[0], geometryMesh.color[1], geometryMesh.color[2])
+      : 0xcfcfcf;
+    var material = new THREE.MeshPhongMaterial({ color: color, specular: 0x111111, shininess: 20 });
+    var mesh = new THREE.Mesh(geometry, material);
+    var edgesGeom = new THREE.EdgesGeometry(geometry, 25);
+    var edges = new THREE.LineSegments(edgesGeom, new THREE.LineBasicMaterial({ color: 0x333333 }));
+    return { mesh: mesh, edges: edges };
+  }
+
+  // Espera activamente a que el contenedor tenga tamaño real (>0) antes de
+  // inicializar el renderer — no depender de en qué orden corren los <script>
+  // ni de si el tab ya quedó visible: más robusto que asumir el orden.
+  function waitForVisibleSize(el, cb, triesLeft) {
+    if (triesLeft === undefined) triesLeft = 60; // ~1s a 60fps como tope
+    if (el.clientWidth > 0 && el.clientHeight > 0) { cb(); return; }
+    if (triesLeft <= 0) { cb(); return; } // se rinde y sigue con lo que haya (evita colgar para siempre)
+    requestAnimationFrame(function () { waitForVisibleSize(el, cb, triesLeft - 1); });
+  }
+
+  async function loadStepViewer(containerEl, modelUrl, statusEl) {
+    var myToken = ++loadToken;
+    containerEl.innerHTML = "";
+    statusEl.textContent = "Cargando motor 3D…";
+
+    var width = containerEl.clientWidth || 800;
+    var height = containerEl.clientHeight || 500;
+
+    var renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+    renderer.setClearColor(0xf4f4f2);
+    containerEl.appendChild(renderer.domElement);
+
+    var camera = new THREE.PerspectiveCamera(45, width / height, 1.0, 100000.0);
+    var scene = new THREE.Scene();
+    scene.add(new THREE.AmbientLight(0x666666));
+    var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(500, 800, 600);
+    scene.add(dirLight);
+
+    var group = new THREE.Object3D();
+    scene.add(group);
+
+    if (!occtPromise) occtPromise = occtimportjs();
+    var occt = await occtPromise;
+    if (myToken !== loadToken) return; // el usuario ya cambió de pieza mientras cargaba
+
+    statusEl.textContent = "Descargando " + modelUrl + " …";
+    var response = await fetch(modelUrl);
+    if (!response.ok) throw new Error("No se pudo descargar " + modelUrl + " (HTTP " + response.status + ")");
+    var buffer = await response.arrayBuffer();
+    if (myToken !== loadToken) return;
+
+    statusEl.textContent = "Procesando geometría STEP (puede tardar unos segundos)…";
+    var result = occt.ReadStepFile(new Uint8Array(buffer), null);
+    if (myToken !== loadToken) return;
+
+    var meshCount = 0;
+    for (var i = 0; i < result.meshes.length; i++) {
+      var built = buildMesh3d(result.meshes[i]);
+      group.add(built.mesh);
+      group.add(built.edges);
+      meshCount++;
+    }
+
+    var box = new THREE.Box3().setFromObject(group);
+    var size = box.getSize(new THREE.Vector3());
+    var center = box.getCenter(new THREE.Vector3());
+    group.position.sub(center);
+
+    var maxDim = Math.max(size.x, size.y, size.z) || 1;
+    var dist = maxDim * 2.2;
+    camera.position.set(dist, dist * 0.8, dist);
+    camera.up.set(0, 0, 1);
+    camera.lookAt(0, 0, 0);
+
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    statusEl.textContent = meshCount + " cuerpo(s) cargados — arrastra para rotar, rueda del mouse para zoom.";
+
+    function onResize() {
+      if (myToken !== loadToken) { window.removeEventListener("resize", onResize); return; }
+      var w = containerEl.clientWidth, h = containerEl.clientHeight;
+      if (!w || !h) return;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+    window.addEventListener("resize", onResize);
+
+    renderer.setAnimationLoop(function () {
+      if (myToken !== loadToken) { renderer.setAnimationLoop(null); return; }
+      controls.update();
+      renderer.render(scene, camera);
+    });
+  }
+
+  function loadPieza(idx) {
+    var containerEl = document.getElementById("viewer3dContainer");
+    var statusEl = document.getElementById("viewer3dStatus");
+    var pieza = PIEZAS_3D[idx];
+    statusEl.textContent = "Preparando visor…";
+    waitForVisibleSize(containerEl, function () {
+      loadStepViewer(containerEl, pieza.file, statusEl).catch(function (err) {
+        statusEl.textContent = "ERROR cargando " + pieza.file + ": " + err.message;
+        console.error(err);
+      });
+    });
+  }
+
+  var select = document.getElementById("piezaSelect");
+  PIEZAS_3D.forEach(function (p, i) {
+    var opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = p.name;
+    select.appendChild(opt);
+  });
+  select.addEventListener("change", function () { loadPieza(Number(select.value)); });
+
+  var tabBtn = document.querySelector('.tab-btn[data-tab="piezas3d"]');
+  if (tabBtn) {
+    tabBtn.addEventListener("click", function () {
+      if (!loaded) { loaded = true; loadPieza(0); }
+    });
+  }
 })();
 </script>
 <script src="app.js"></script>
