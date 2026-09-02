@@ -337,19 +337,19 @@
       <div class="filtros-controls">
         <div class="filtros-group" id="filtrosVentiladorGroup">
           <span class="filtros-group-label">Ventilador:</span>
-          <div id="filtrosVentiladorBtns" class="filtros-btn-row"></div>
+          <select id="filtrosVentiladorSelect" class="filtros-select"></select>
         </div>
-        <div class="filtros-group" id="filtrosVelocidadGroup">
-          <span class="filtros-group-label">Velocidad:</span>
-          <div id="filtrosVelocidadBtns" class="filtros-btn-row"></div>
+        <div class="filtros-group filtros-group-wide" id="filtrosVelocidadGroup">
+          <span class="filtros-group-label">Velocidad: <span id="filtrosVelocidadValor">100%</span></span>
+          <input type="range" id="filtrosVelocidadSlider" class="filtros-slider" min="20" max="100" step="5" value="100">
         </div>
         <div class="filtros-group">
           <span class="filtros-group-label">Amenaza:</span>
           <div id="filtrosAmenazaBtns" class="filtros-btn-row"></div>
         </div>
         <div class="filtros-group" id="filtrosFiltroGroup">
-          <span class="filtros-group-label">Filtro:</span>
-          <div id="filtrosFiltroBtns" class="filtros-btn-row"></div>
+          <span class="filtros-group-label">Filtro (solución):</span>
+          <select id="filtrosFiltroSelect" class="filtros-select"></select>
         </div>
         <button type="button" id="filtrosReset" class="filtros-reset-btn">↻ Reiniciar</button>
       </div>
@@ -374,13 +374,18 @@
         empujada por el ventilador (izquierda) hacia los equipos electrónicos
         (derecha). El filtro elegido decide qué pasa, qué se detiene, y —en
         la Versión 2— cuánto se obstruye con el tiempo y cuánto caudal
-        pierde el sistema por esa obstrucción. El selector de <strong>Ventilador</strong>
-        (Versión 2) usa el caudal, presión estática y consumo reales de los 5
-        modelos que compró el departamento — cambiarlo cambia el caudal base
-        de toda la simulación, igual que la <strong>Velocidad</strong>
-        (100%/70%, mismo criterio que la pestaña «Análisis de Datos»). Es una
-        simulación conceptual/educativa, no una medición real de eficiencia de
-        filtración.
+        pierde el sistema por esa obstrucción. El menú desplegable de
+        <strong>Ventilador</strong> (Versión 2) usa el caudal, presión estática y
+        consumo reales de los 6 modelos con los que trabaja el departamento —
+        incluido el ventilador de alto consumo original del proyecto (RUI ZHAN
+        RZ12038H12B-6) con su caudal medido en túnel de viento, no el del
+        fabricante — y cambiarlo cambia el caudal base de toda la simulación.
+        El control deslizante de <strong>Velocidad</strong> regula el % de RPM en
+        vivo (20%–100%, mismo criterio de 100%/70% que la pestaña «Análisis de
+        Datos» pero ajustable a cualquier punto intermedio). El menú de
+        <strong>Filtro</strong> agrupa las distintas soluciones de filtrado
+        evaluadas por el equipo. Es una simulación conceptual/educativa, no una
+        medición real de eficiencia de filtración.
       </p>
     </div>
   </section>
@@ -546,9 +551,17 @@
     2: { name: "Noctua NF-F12 industrialPPC-3000", cfm: 109.9, mmH2O: 7.63, rpmMax: 3000, dba: 43.5, watts: 3.6, wattsEstimado: false },
     3: { name: "Corsair RS120", cfm: 72.8, mmH2O: 4.15, rpmMax: 2100, dba: 36, watts: 4.8, wattsEstimado: false },
     4: { name: "ARCTIC P12 Pro PST CO", cfm: 56.3, mmH2O: 2.2, rpmMax: 3000, dba: 25, watts: 0.96, wattsEstimado: false },
-    5: { name: "ARCTIC P12 Pro PST LN (5 Pack)", cfm: 49, mmH2O: 3.5, rpmMax: 2000, dba: 25, watts: 0.8, wattsEstimado: true }
+    5: { name: "ARCTIC P12 Pro PST LN (5 Pack)", cfm: 49, mmH2O: 3.5, rpmMax: 2000, dba: 25, watts: 0.8, wattsEstimado: true },
+    // El ventilador original del proyecto (el "de alto consumo" de toda la
+    // transcripción/estudio) — RUI ZHAN RZ12038H12B-6 (12V/2.7A = 32.4W,
+    // 6000 RPM según fabricante, fan de minería ASIC). Su CFM aquí NO es el
+    // dato de fabricante (el equipo mismo desconfía de esa cifra, ver
+    // transcripción: "el fabricante se equivocó... busca redondear para
+    // arriba") — es el caudal MEDIDO por el propio equipo en el túnel de
+    // viento (63,56 CFM al 100%, mismo número que la pestaña Análisis de
+    // Datos), que es más confiable que el datasheet.
+    6: { name: "RUI ZHAN RZ12038H12B-6 (alto consumo, original)", cfm: 63.56, mmH2O: null, rpmMax: 6000, dba: null, watts: 32.4, wattsEstimado: false, medido: true }
   };
-  var SPEED_OPTIONS = { 100: "100%", 70: "70%" };
   // ---------- definiciones version 1 (Tul + Nylon, Simulacion.py) ----------
   var PARTICLE_V1 = {
     1: { name: "Insectos/Escombros", color: COLORS.orange, size: 10, speed: 3 },
@@ -566,7 +579,7 @@
     version: 2,
     activeParticle: 1,
     activeFilter: 1,
-    activeFan: 1,
+    activeFan: 6, // arranca en el ventilador original del proyecto (Rui Zhan)
     speedPct: 100,
     fanAngle: 0,
     particles: [],
@@ -812,9 +825,13 @@
 
     if (state.version === 2) {
       var selFan2 = FAN_MODELS[state.activeFan];
-      var rpmAprox = Math.round(selFan2.rpmMax * (state.speedPct / 100));
+      var speedFraction2 = state.speedPct / 100;
+      var rpmAprox = Math.round(selFan2.rpmMax * speedFraction2);
+      // Consumo escalado linealmente por velocidad (aproximación educativa, no
+      // curva real del motor) — la spec nominal completa queda en el caption.
+      var wattsAprox = selFan2.watts * speedFraction2;
       document.getElementById("filtrosHudRpm").textContent = rpmAprox + " RPM";
-      document.getElementById("filtrosHudWatts").textContent = selFan2.watts.toFixed(1) + " W" + (selFan2.wattsEstimado ? "*" : "");
+      document.getElementById("filtrosHudWatts").textContent = wattsAprox.toFixed(1) + " W" + (selFan2.wattsEstimado ? "*" : "");
     }
 
     var verdictEl = document.getElementById("filtrosVerdict");
@@ -828,7 +845,7 @@
     }
   }
 
-  // ---------- UI: botones ----------
+  // ---------- UI: botones / selects ----------
   function buildButtons(container, items, activeKey, onPick) {
     container.innerHTML = "";
     Object.keys(items).forEach(function (key) {
@@ -841,14 +858,33 @@
     });
   }
 
+  // Menús desplegables (a pedido del jefe en la reunión: "es un desplegable
+  // de ventilador") para Ventilador y Filtro — más ordenado que filas de
+  // botones ahora que hay 6 ventiladores y 6 soluciones de filtro.
+  function buildSelect(selectEl, items, activeKey, onPick) {
+    selectEl.innerHTML = "";
+    Object.keys(items).forEach(function (key) {
+      var opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = items[key].name;
+      if (Number(key) === activeKey) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+    selectEl.onchange = function () { onPick(Number(selectEl.value)); };
+  }
+
   function updateFanSpecCaption() {
     var el = document.getElementById("filtrosFanSpec");
     if (state.version !== 2) { el.textContent = ""; return; }
     var f = FAN_MODELS[state.activeFan];
-    el.innerHTML =
-      f.name + " — " + f.cfm + " CFM máx. · " + f.mmH2O + " mmH₂O · " + f.rpmMax + " RPM máx. · " +
-      f.dba + " dBA · " + f.watts.toFixed(1) + " W" + (f.wattsEstimado ? " (estimado, no publicado por el fabricante)" : "") +
-      " — specs de fabricante, ventilador real comprado por el departamento.";
+    var cfmLabel = f.cfm + " CFM " + (f.medido ? "medido en túnel de viento" : "máx. (fabricante)");
+    var pressureLabel = f.mmH2O != null ? f.mmH2O + " mmH₂O · " : "";
+    var dbaLabel = f.dba != null ? f.dba + " dBA · " : "";
+    var wattsLabel = f.watts.toFixed(1) + " W" + (f.wattsEstimado ? " (estimado, no publicado por el fabricante)" : "");
+    var fuente = f.medido
+      ? " — caudal medido por el propio equipo (no se usa el dato del fabricante, ver pestaña Análisis de Datos), resto de specs de fabricante."
+      : " — specs de fabricante, ventilador real comprado por el departamento.";
+    el.innerHTML = f.name + " — " + cfmLabel + " · " + pressureLabel + f.rpmMax + " RPM máx. · " + dbaLabel + wattsLabel + fuente;
   }
 
   function rebuildUI() {
@@ -868,32 +904,19 @@
       velocidadGroup.style.display = "";
       hudRpmWrap.style.display = "";
       hudWattsWrap.style.display = "";
-      buildButtons(document.getElementById("filtrosFiltroBtns"), FILTER_V2, state.activeFilter, function (k) {
+      buildSelect(document.getElementById("filtrosFiltroSelect"), FILTER_V2, state.activeFilter, function (k) {
         state.activeFilter = k;
         resetSim();
         rebuildUI();
       });
-      buildButtons(document.getElementById("filtrosVentiladorBtns"), FAN_MODELS, state.activeFan, function (k) {
+      buildSelect(document.getElementById("filtrosVentiladorSelect"), FAN_MODELS, state.activeFan, function (k) {
         state.activeFan = k;
         resetSim();
         rebuildUI();
       });
-      // Objeto de claves 100/70 se reordenaría solo ascendente (70 antes que 100)
-      // si se usara buildButtons genérico — se arma a mano para que 100% quede primero.
-      var speedContainer = document.getElementById("filtrosVelocidadBtns");
-      speedContainer.innerHTML = "";
-      [100, 70].forEach(function (pct) {
-        var btn = document.createElement("button");
-        btn.type = "button";
-        btn.textContent = SPEED_OPTIONS[pct];
-        btn.className = "filtros-opt-btn" + (pct === state.speedPct ? " active" : "");
-        btn.addEventListener("click", function () {
-          state.speedPct = pct;
-          resetSim();
-          rebuildUI();
-        });
-        speedContainer.appendChild(btn);
-      });
+      var slider = document.getElementById("filtrosVelocidadSlider");
+      slider.value = state.speedPct;
+      document.getElementById("filtrosVelocidadValor").textContent = state.speedPct + "%";
     } else {
       filtroGroup.style.display = "none";
       ventiladorGroup.style.display = "none";
@@ -903,6 +926,17 @@
     }
     updateFanSpecCaption();
   }
+
+  // Slider de velocidad — "ir regulando" en vivo (evento input, no solo
+  // change) y se conecta una sola vez fuera de rebuildUI para no perder el
+  // valor mientras se arrastra.
+  document.getElementById("filtrosVelocidadSlider").addEventListener("input", function (e) {
+    state.speedPct = Number(e.target.value);
+    document.getElementById("filtrosVelocidadValor").textContent = state.speedPct + "%";
+  });
+  document.getElementById("filtrosVelocidadSlider").addEventListener("change", function () {
+    resetSim();
+  });
 
   document.querySelectorAll(".filtros-ver-btn").forEach(function (btn) {
     btn.addEventListener("click", function () {
