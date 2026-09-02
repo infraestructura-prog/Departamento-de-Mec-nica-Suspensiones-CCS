@@ -596,6 +596,16 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .filtros-fan-spec a { color: var(--muted); }
 
+.viewer3d-container {
+  width: 100%;
+  height: 500px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: #f4f4f2; /* fondo claro fijo del visor — el modelo 3D usa colores propios del STEP */
+}
+.viewer3d-container canvas { display: block; }
+
 .filtros-select {
   font-family: inherit;
   font-size: 12.5px;
