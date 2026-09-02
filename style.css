@@ -596,6 +596,51 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .filtros-fan-spec a { color: var(--muted); }
 
+.filtros-select {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  cursor: pointer;
+  min-width: 220px;
+}
+.filtros-select:focus { outline: 2px solid var(--aqua); outline-offset: 1px; }
+
+.filtros-group-wide { min-width: 220px; }
+.filtros-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-width: 180px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+.filtros-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--aqua);
+  border: 2px solid var(--bg-panel);
+  cursor: pointer;
+}
+.filtros-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--aqua);
+  border: 2px solid var(--bg-panel);
+  cursor: pointer;
+}
+
 /* ---------------------------------- responsive ---------------------------------- */
 
 @media (max-width: 600px) {
