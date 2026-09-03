@@ -370,6 +370,182 @@
       </div>
     </div>
 
+    <div class="section-head" style="margin-top:8px;">
+      <h2 style="font-size:20px;">Caso por caso</h2>
+      <p class="section-sub">
+        Seis cuadros por ventilador, espaciados 240 iteraciones (de 1.200 totales) para ver el
+        calentamiento asentarse de forma gradual — misma escala de color fija en los seis
+        (313,0–316,5 K) para que el color sea comparable entre ventiladores.
+      </p>
+    </div>
+
+    <div class="case-block">
+      <div class="case-block-head">
+        <div>
+          <p class="case-block-title">01 · RUI ZHAN RZ12038H12B-6</p>
+          <p class="case-block-role" style="color:var(--muted);">Ventilador actual del NODO — línea base</p>
+        </div>
+        <div class="case-block-specs">
+          <div class="s"><div class="l">Caudal</div><div class="v">63,6 CFM</div></div>
+          <div class="s"><div class="l">Consumo</div><div class="v">32,4 W</div></div>
+          <div class="s"><div class="l">Pared máx.</div><div class="v">62,1 °C</div></div>
+        </div>
+      </div>
+      <p class="analysis-text">
+        Es el ventilador más hambriento de energía de los seis (32,4 W, más del doble que el
+        segundo lugar) y aun así entrega un caudal apenas mediano. El resultado: uno de los dos
+        puntos más calientes del lote. Es el único de los seis con caudal medido en el túnel de
+        viento propio — no confiamos en la ficha del fabricante, y esa desconfianza resultó justificada.
+      </p>
+      <div class="case-filmstrip">
+        <figure><img src="termico-v1-40.png" alt="iter 40"><figcaption>40</figcaption></figure>
+        <figure><img src="termico-v1-240.png" alt="iter 240"><figcaption>240</figcaption></figure>
+        <figure><img src="termico-v1-480.png" alt="iter 480"><figcaption>480</figcaption></figure>
+        <figure><img src="termico-v1-720.png" alt="iter 720"><figcaption>720</figcaption></figure>
+        <figure><img src="termico-v1-960.png" alt="iter 960"><figcaption>960</figcaption></figure>
+        <figure><img src="termico-v1-1200.png" alt="iter 1200"><figcaption>1200</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="case-block" style="border-color:var(--aqua);">
+      <div class="case-block-head">
+        <div>
+          <p class="case-block-title">02 · Noctua NF-F12 industrialPPC-3000</p>
+          <p class="case-block-role" style="color:var(--aqua);">Gana en caudal Y en consumo — recomendado</p>
+        </div>
+        <div class="case-block-specs">
+          <div class="s"><div class="l">Caudal</div><div class="v">109,9 CFM</div></div>
+          <div class="s"><div class="l">Consumo</div><div class="v">3,6 W</div></div>
+          <div class="s"><div class="l">Pared máx.</div><div class="v">56,6 °C</div></div>
+        </div>
+      </div>
+      <p class="analysis-text">
+        El único ventilador industrial del lote (diseñado para operar 24/7 a alta presión
+        estática) y se nota: casi el doble de caudal que el actual, a una fracción del consumo.
+        La secuencia se estabiliza visiblemente más rápido y más fría que la del RUI ZHAN — es
+        la corrida con menos naranja/rojo de las seis. Su caudal es de ficha de fabricante,
+        todavía no validado en el túnel de viento propio (ver paso 2 de los próximos pasos).
+      </p>
+      <div class="case-filmstrip">
+        <figure><img src="termico-noctua-40.png" alt="iter 40"><figcaption>40</figcaption></figure>
+        <figure><img src="termico-noctua-240.png" alt="iter 240"><figcaption>240</figcaption></figure>
+        <figure><img src="termico-noctua-480.png" alt="iter 480"><figcaption>480</figcaption></figure>
+        <figure><img src="termico-noctua-720.png" alt="iter 720"><figcaption>720</figcaption></figure>
+        <figure><img src="termico-noctua-960.png" alt="iter 960"><figcaption>960</figcaption></figure>
+        <figure><img src="termico-noctua-1200.png" alt="iter 1200"><figcaption>1200</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="case-block">
+      <div class="case-block-head">
+        <div>
+          <p class="case-block-title">03 · be quiet! Silent Wings Pro 4</p>
+          <p class="case-block-role" style="color:var(--blue);">El más silencioso del lote — respaldo si el ruido pesa</p>
+        </div>
+        <div class="case-block-specs">
+          <div class="s"><div class="l">Caudal</div><div class="v">83,9 CFM</div></div>
+          <div class="s"><div class="l">Consumo</div><div class="v">3,6 W</div></div>
+          <div class="s"><div class="l">Pared máx.</div><div class="v">58,4 °C</div></div>
+        </div>
+      </div>
+      <p class="analysis-text">
+        Mismo consumo exacto que el Noctua (3,6 W) pero menos caudal, así que se queda segundo en
+        enfriamiento — igual 3,7 °C más fresco que el actual. Es el candidato obvio si el nivel
+        de ruido del Noctua resulta un problema para un equipo que va montado cerca del operador
+        de la moto de rescate.
+      </p>
+      <div class="case-filmstrip">
+        <figure><img src="termico-bequiet-40.png" alt="iter 40"><figcaption>40</figcaption></figure>
+        <figure><img src="termico-bequiet-240.png" alt="iter 240"><figcaption>240</figcaption></figure>
+        <figure><img src="termico-bequiet-480.png" alt="iter 480"><figcaption>480</figcaption></figure>
+        <figure><img src="termico-bequiet-720.png" alt="iter 720"><figcaption>720</figcaption></figure>
+        <figure><img src="termico-bequiet-960.png" alt="iter 960"><figcaption>960</figcaption></figure>
+        <figure><img src="termico-bequiet-1200.png" alt="iter 1200"><figcaption>1200</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="case-block">
+      <div class="case-block-head">
+        <div>
+          <p class="case-block-title">04 · Corsair RS120</p>
+          <p class="case-block-role" style="color:var(--muted);">Del medio de la tabla — sin argumento fuerte a favor</p>
+        </div>
+        <div class="case-block-specs">
+          <div class="s"><div class="l">Caudal</div><div class="v">72,8 CFM</div></div>
+          <div class="s"><div class="l">Consumo</div><div class="v">4,8 W</div></div>
+          <div class="s"><div class="l">Pared máx.</div><div class="v">60,0 °C</div></div>
+        </div>
+      </div>
+      <p class="analysis-text">
+        Mejora sobre el actual (2,1 °C más fresco) pero es el que más consume de los cinco
+        candidatos nuevos, y enfría menos que Noctua o be quiet! a un consumo mayor. No hay una
+        razón clara para elegirlo sobre esos dos.
+      </p>
+      <div class="case-filmstrip">
+        <figure><img src="termico-corsair-40.png" alt="iter 40"><figcaption>40</figcaption></figure>
+        <figure><img src="termico-corsair-240.png" alt="iter 240"><figcaption>240</figcaption></figure>
+        <figure><img src="termico-corsair-480.png" alt="iter 480"><figcaption>480</figcaption></figure>
+        <figure><img src="termico-corsair-720.png" alt="iter 720"><figcaption>720</figcaption></figure>
+        <figure><img src="termico-corsair-960.png" alt="iter 960"><figcaption>960</figcaption></figure>
+        <figure><img src="termico-corsair-1200.png" alt="iter 1200"><figcaption>1200</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="case-block">
+      <div class="case-block-head">
+        <div>
+          <p class="case-block-title">05 · ARCTIC P12 Pro PST CO</p>
+          <p class="case-block-role" style="color:var(--muted);">Bajo consumo, pero casi no mejora el resultado térmico</p>
+        </div>
+        <div class="case-block-specs">
+          <div class="s"><div class="l">Caudal</div><div class="v">56,3 CFM</div></div>
+          <div class="s"><div class="l">Consumo</div><div class="v">0,96 W</div></div>
+          <div class="s"><div class="l">Pared máx.</div><div class="v">62,5 °C</div></div>
+        </div>
+      </div>
+      <p class="analysis-text">
+        Consume 33× menos que el actual, pero mueve tan poco aire que la pared de Centinela
+        termina 0,4 °C más caliente que con el ventilador actual, no más fría. Empieza a mostrar
+        el mismo patrón que el ARCTIC LN, solo que todavía no cruza a peor.
+      </p>
+      <div class="case-filmstrip">
+        <figure><img src="termico-arctic_co-40.png" alt="iter 40"><figcaption>40</figcaption></figure>
+        <figure><img src="termico-arctic_co-240.png" alt="iter 240"><figcaption>240</figcaption></figure>
+        <figure><img src="termico-arctic_co-480.png" alt="iter 480"><figcaption>480</figcaption></figure>
+        <figure><img src="termico-arctic_co-720.png" alt="iter 720"><figcaption>720</figcaption></figure>
+        <figure><img src="termico-arctic_co-960.png" alt="iter 960"><figcaption>960</figcaption></figure>
+        <figure><img src="termico-arctic_co-1200.png" alt="iter 1200"><figcaption>1200</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="case-block" style="border-color:var(--bad);">
+      <div class="case-block-head">
+        <div>
+          <p class="case-block-title">06 · ARCTIC P12 Pro PST LN</p>
+          <p class="case-block-role" style="color:var(--bad);">Mínimo consumo del lote — y el peor resultado</p>
+        </div>
+        <div class="case-block-specs">
+          <div class="s"><div class="l">Caudal</div><div class="v">49,0 CFM</div></div>
+          <div class="s"><div class="l">Consumo</div><div class="v">0,8 W</div></div>
+          <div class="s"><div class="l">Pared máx.</div><div class="v">64,1 °C</div></div>
+        </div>
+      </div>
+      <p class="analysis-text">
+        La lección del estudio, en un solo ventilador: consume 40× menos que el actual — y aun
+        así termina con la pared de Centinela más caliente de los seis, 2 °C peor que el
+        ventilador que reemplaza. Mueve tan poco aire (49 CFM, el más bajo del lote) que ningún
+        ahorro de autocalentamiento compensa la falta de caudal.
+      </p>
+      <div class="case-filmstrip">
+        <figure><img src="termico-arctic_ln-40.png" alt="iter 40"><figcaption>40</figcaption></figure>
+        <figure><img src="termico-arctic_ln-240.png" alt="iter 240"><figcaption>240</figcaption></figure>
+        <figure><img src="termico-arctic_ln-480.png" alt="iter 480"><figcaption>480</figcaption></figure>
+        <figure><img src="termico-arctic_ln-720.png" alt="iter 720"><figcaption>720</figcaption></figure>
+        <figure><img src="termico-arctic_ln-960.png" alt="iter 960"><figcaption>960</figcaption></figure>
+        <figure><img src="termico-arctic_ln-1200.png" alt="iter 1200"><figcaption>1200</figcaption></figure>
+      </div>
+    </div>
+
     <div class="chart-card wide">
       <h3>Cuadro a cuadro — cómo evoluciona la temperatura</h3>
       <div class="filtros-group" style="margin-bottom:14px;">
@@ -419,6 +595,67 @@
         repartida sobre el caudal de aire que entra — mismo método en los seis escenarios,
         para que la comparación sea justa.
       </p>
+    </div>
+
+    <div class="section-head" style="margin-top:8px;">
+      <h2 style="font-size:20px;">Qué hacer con esto</h2>
+    </div>
+
+    <div class="reco-banner">
+      <div class="icon">✓</div>
+      <div>
+        <h3>Adoptar el Noctua NF-F12 industrialPPC-3000 como ventilador estándar del NODO</h3>
+        <p>Gana en caudal y en consumo al mismo tiempo frente al ventilador actual — no es un
+          balance de compromiso, domina las dos variables. Es la decisión de mayor impacto y
+          menor riesgo de las seis opciones evaluadas.</p>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>Próximos pasos, en orden de qué tan barato es resolverlos</h3>
+      <div class="steps">
+        <div class="step-item">
+          <div>
+            <h4>Medir el autocalentamiento real de la batería EcoFlow</h4>
+            <p>Es el mayor hueco del estudio: los seis escenarios modelan la River 2 Pro como
+              adiabática porque no hay dato real. Se mide con la app de EcoFlow en uso típico —
+              mismo método ya usado para confirmar los 25 W reales de los ventiladores actuales.</p>
+            <span class="step-cost">Costo $0</span>
+          </div>
+        </div>
+        <div class="step-item">
+          <div>
+            <h4>Validar el caudal del Noctua en el túnel de viento propio</h4>
+            <p>Los 109,9 CFM son de ficha de fabricante. El RUI ZHAN enseñó que esos números no
+              siempre coinciden con la medición real — antes de estandarizar el Noctua, correr el
+              mismo protocolo experimental que ya se usó con el ventilador actual.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div>
+            <h4>Evaluar el ruido del Noctua en campo</h4>
+            <p>Es el más ruidoso del lote (43,5 dBA de ficha). Si resulta molesto para el
+              operador de la moto, be quiet! Silent Wings Pro 4 es el respaldo directo — mismo
+              consumo, 3,7 °C más fresco que el actual, y sensiblemente más silencioso.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div>
+            <h4>Renderizar el campo de flujo de aire por ventilador, no solo temperatura</h4>
+            <p>Este estudio corrió y coloreó únicamente el campo térmico. No existe hoy una
+              visualización de cómo se mueve el aire dentro del NODO para cada uno de los seis
+              ventiladores — sería un post-proceso adicional sobre los mismos casos ya resueltos,
+              no una simulación nueva desde cero.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div>
+            <h4>Correr una séptima simulación con el ventilador elegido y la carga real de batería</h4>
+            <p>Una vez resueltos los pasos 1 y 2, esa combinación da la primera cifra de diseño
+              realmente conservadora del NODO — no optimista como las seis de este documento.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="analysis-block" style="border-left-color:var(--bad);">
