@@ -596,6 +596,89 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .filtros-fan-spec a { color: var(--muted); }
 
+/* ---------------------------------- Térmica NODO: casos + recomendación ---------------------------------- */
+
+.case-block {
+  background: var(--card-fill);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.case-block-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.case-block-title { font-size: 16px; font-weight: 700; color: var(--ink); margin: 0; }
+.case-block-role { font-size: 12.5px; font-weight: 600; margin: 3px 0 0; }
+.case-block-specs { display: flex; gap: 16px; text-align: right; }
+.case-block-specs .s .l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.case-block-specs .s .v { font-size: 14px; font-weight: 700; color: var(--ink); font-family: inherit; }
+
+.case-filmstrip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  margin-top: 14px;
+}
+.case-filmstrip figure { margin: 0; }
+.case-filmstrip img {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #14122C;
+}
+.case-filmstrip figcaption { text-align: center; font-size: 10px; color: var(--muted); margin-top: 3px; }
+@media (max-width: 640px) { .case-filmstrip { grid-template-columns: repeat(3, 1fr); } }
+
+.reco-banner {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 20px 24px;
+  border-radius: 12px;
+  background: rgba(27, 175, 122, 0.1);
+  border: 1px solid rgba(27, 175, 122, 0.35);
+  margin-bottom: 22px;
+}
+.reco-banner .icon { font-size: 24px; line-height: 1; color: var(--aqua); }
+.reco-banner h3 { margin: 0 0 6px; font-size: 15px; color: var(--aqua); }
+.reco-banner p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+
+.steps { counter-reset: step; }
+.step-item {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+.step-item:first-child { border-top: none; padding-top: 4px; }
+.step-item::before {
+  content: counter(step, decimal-leading-zero);
+  font-weight: 700;
+  color: var(--yellow);
+  font-size: 14px;
+}
+.step-item h4 { margin: 0 0 4px; font-size: 14px; color: var(--ink); }
+.step-item p { margin: 0; font-size: 13px; color: var(--ink-2); }
+.step-cost {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--aqua);
+  background: rgba(27, 175, 122, 0.12);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
 .viewer3d-container {
   width: 100%;
   height: 500px;
