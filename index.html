@@ -40,6 +40,7 @@
   <button class="tab-btn" data-tab="historial">Historial Impresoras</button>
   <button class="tab-btn" data-tab="analisis">Análisis de Datos</button>
   <button class="tab-btn" data-tab="nodos">NODOS</button>
+  <button class="tab-btn" data-tab="termico">Térmica NODO</button>
   <button class="tab-btn" data-tab="filtros">Filtros</button>
   <button class="tab-btn" data-tab="sku">Guía SKU</button>
   <button class="tab-btn" data-tab="piezas3d">Piezas 3D</button>
@@ -313,6 +314,130 @@
         ventiladores (todavía sin modelar), y el diseño final de la maleta
         (paredes, piso y tapa reales — hoy es una envolvente simplificada).
       </p>
+    </div>
+  </section>
+
+  <!-- ================= TÉRMICA NODO ================= -->
+  <section class="tab-panel" id="panel-termico">
+    <div class="section-head">
+      <h2>Comportamiento térmico según el ventilador</h2>
+      <p class="section-sub">
+        Mismo caso térmico de OpenFOAM (geometría real del NODO, ambiente de La Guaira
+        medido a 40&nbsp;°C) corrido seis veces — una por cada ventilador de los que ya se
+        comparan en la pestaña Filtros (los 6 modelos de <code>FAN_MODELS</code>). La
+        pregunta: ¿cuál realmente enfría más el NODO, no solo cuál consume menos?
+        <span class="static-tag">contenido fijo — no se lee de un Sheet</span>
+      </p>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card" style="--accent:var(--blue)"><div class="kpi-label">Solver</div><div class="kpi-value" style="font-size:16px">buoyantSimpleFoam</div></div>
+      <div class="kpi-card" style="--accent:var(--aqua)"><div class="kpi-label">Malla</div><div class="kpi-value" style="font-size:16px">48.058 celdas</div><div class="kpi-sub">refinada en Centinela</div></div>
+      <div class="kpi-card" style="--accent:var(--yellow)"><div class="kpi-label">Iteraciones/corrida</div><div class="kpi-value">1.200</div></div>
+      <div class="kpi-card" style="--accent:var(--blue)"><div class="kpi-label">Ambiente</div><div class="kpi-value" style="font-size:16px">313,15 K</div><div class="kpi-sub">40 °C, La Guaira, medido</div></div>
+    </div>
+
+    <div class="analysis-block">
+      <h3>Hallazgo principal</h3>
+      <p class="analysis-text">
+        El <strong>Noctua NF-F12 industrialPPC-3000</strong> gana en las dos cosas a la vez:
+        +73% de caudal y −89% de consumo frente al ventilador actual — y es el que más
+        enfría de los seis, con la superficie de la electrónica 3,2 °C más fría que el
+        actual.
+      </p>
+      <p class="analysis-text" style="margin-top:10px;">
+        Pero el consumo mínimo no gana solo por serlo: el <strong>ARCTIC P12 Pro PST LN</strong>
+        consume 40× menos que el actual y aun así queda con uno de los puntos más
+        calientes del lote (64,1 °C) — mueve tan poco aire que pierde más de lo que
+        ahorra en autocalentamiento. El caudal que llega a la zona caliente pesa más que
+        los vatios del propio ventilador.
+      </p>
+    </div>
+
+    <div class="table-card">
+      <h3>Comparativa — los 6 ventiladores de Filtros</h3>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Ventilador</th><th>Caudal</th><th>Consumo</th><th>v entrada</th>
+              <th>Aire interior (mediana)</th><th>Aire interior (máx.)</th>
+              <th>Pared Centinela (mediana)</th><th>Pared Centinela (máx.)</th>
+            </tr>
+          </thead>
+          <tbody id="termicoTablaBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-card wide">
+      <h3>Cuadro a cuadro — cómo evoluciona la temperatura</h3>
+      <div class="filtros-group" style="margin-bottom:14px;">
+        <span class="filtros-group-label">Ventilador:</span>
+        <select id="termicoFanSelect" class="filtros-select"></select>
+      </div>
+      <div class="nodos-player">
+        <img id="termicoPlayerImg" alt="Cuadro de temperatura">
+        <div class="nodos-player-controls">
+          <button type="button" id="termicoPrev">⏮ Anterior</button>
+          <button type="button" id="termicoPlay">▶ Reproducir</button>
+          <button type="button" id="termicoNext">Siguiente ⏭</button>
+        </div>
+        <div class="nodos-player-controls">
+          <input type="range" id="termicoSlider" class="filtros-slider" min="0" max="29" value="29" step="1" style="max-width:400px;">
+          <span id="termicoReadout" class="filtros-fan-spec" style="margin:0;"></span>
+        </div>
+      </div>
+      <p class="filtros-fan-spec">
+        30 cuadros por ventilador, cada 40 iteraciones (0→1.200) · misma escala de color
+        en los seis (313,0–316,5 K) para que el color sea comparable entre ventiladores.
+      </p>
+    </div>
+
+    <div class="chart-card wide">
+      <h3>Las iteraciones corriendo, no un resultado congelado</h3>
+      <p class="analysis-text">
+        Residual de presión (p_rgh) por iteración, escala logarítmica. Las seis corridas
+        bajan del mismo arranque y se asientan en una meseta real entre 1,4% y 1,8% — no
+        es falta de iteraciones, es la propia física del caso (mismo patrón visto antes en
+        el flujo isotérmico de <code>case_nodo_v2</code>).
+      </p>
+      <div id="termicoLegend" style="display:flex;flex-wrap:wrap;gap:14px;margin:12px 0;font-size:12px;color:var(--ink-2);"></div>
+      <div class="chart-wrap"><svg id="termicoChart" viewBox="0 0 1000 360" style="width:100%;height:100%;"></svg></div>
+      <p class="filtros-fan-spec">1.200 iteraciones por corrida · buoyantSimpleFoam, RAS k-ε · corrida real en esta máquina vía OpenFOAM/WSL.</p>
+    </div>
+
+    <div class="analysis-block">
+      <h3>De dónde sale cada número</h3>
+      <p class="analysis-text">
+        Caudal, consumo y modelo de cada ventilador: los mismos seis de <code>FAN_MODELS</code>
+        en la pestaña Filtros (el RUI ZHAN es el único con caudal medido en túnel de
+        viento propio, no de ficha). Temperatura ambiente: 40 °C medidos en La
+        Guaira/Caraballeda (DHT22, subproyecto de Electrónica). Calor de Centinela: 3,5 W
+        confirmados (ESP32+GPS+DHT22, mismo "cerebro" en todos los NODOS). El
+        autocalentamiento de cada ventilador se estimó con su propia potencia de etiqueta
+        repartida sobre el caudal de aire que entra — mismo método en los seis escenarios,
+        para que la comparación sea justa.
+      </p>
+    </div>
+
+    <div class="analysis-block" style="border-left-color:var(--bad);">
+      <h3>⚠ Qué no está resuelto todavía — la batería no está en ninguno de los seis escenarios</h3>
+      <ul class="analysis-text" style="margin:0;padding-left:18px;">
+        <li style="margin-bottom:8px;"><strong>La EcoFlow River 2 Pro sigue sin dato de autocalentamiento confirmado.</strong>
+          Es el componente más grande del NODO y el que de verdad importa proteger — y en
+          los seis casos está modelada como adiabática porque no existe una medición real.
+          El resultado de los seis escenarios es <strong>optimista, no conservador</strong>.</li>
+        <li style="margin-bottom:8px;">La comparación <em>relativa</em> entre ventiladores (Noctua enfría más que el resto)
+          sí es confiable — el sesgo de no incluir la batería afecta a los seis escenarios
+          por igual.</li>
+        <li style="margin-bottom:8px;">La superficie de Centinela es la única con dato de calor real; se refinó la malla ahí
+          (~2,5 mm) porque con la malla base el primer pase daba picos de pared poco
+          confiables.</li>
+        <li>Pedido concreto y de costo $0: medir con la app de EcoFlow cuánto calor disipa la
+          batería en uso típico — es el mismo método que Electrónica ya usó para medir los
+          25 W reales de los ventiladores actuales.</li>
+      </ul>
     </div>
   </section>
 
@@ -1137,6 +1262,175 @@
       if (!loaded) { loaded = true; loadPieza(0); }
     });
   }
+})();
+</script>
+<!-- ===== Térmica NODO: tabla + reproductor cuadro-a-cuadro (6 ventiladores) + convergencia ===== -->
+<script>
+(function () {
+  var panel = document.getElementById("panel-termico");
+  if (!panel) return;
+
+  var TERMICO_FANS = [
+    { key: "v1", name: "RUI ZHAN RZ12038H12B-6", note: "actual del NODO", cfm: 63.6, w: 32.4, v: 2.08, tMed: 40.9, tMax: 50.7, cMed: 50.6, cMax: 62.1 },
+    { key: "noctua", name: "Noctua NF-F12 industrialPPC-3000", note: "gana en caudal Y en consumo", cfm: 109.9, w: 3.6, v: 3.60, tMed: 40.1, tMax: 46.3, cMed: 47.8, cMax: 56.6 },
+    { key: "bequiet", name: "be quiet! Silent Wings Pro 4", note: "el más silencioso del lote", cfm: 83.9, w: 3.6, v: 2.75, tMed: 40.1, tMax: 48.0, cMed: 49.0, cMax: 58.4 },
+    { key: "corsair", name: "Corsair RS120", note: "", cfm: 72.8, w: 4.8, v: 2.39, tMed: 40.1, tMax: 49.4, cMed: 49.4, cMax: 60.0 },
+    { key: "arctic_co", name: "ARCTIC P12 Pro PST CO", note: "", cfm: 56.3, w: 0.96, v: 1.85, tMed: 40.0, tMax: 51.1, cMed: 50.0, cMax: 62.5 },
+    { key: "arctic_ln", name: "ARCTIC P12 Pro PST LN", note: "mínimo consumo del lote", cfm: 49.0, w: 0.8, v: 1.61, tMed: 40.0, tMax: 52.8, cMed: 50.5, cMax: 64.1 }
+  ];
+
+  var ITERS = [];
+  for (var itv = 40; itv <= 1200; itv += 40) ITERS.push(itv);
+
+  function fmt1(n) { return n.toLocaleString("es-VE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // --- tabla comparativa ---
+  var tbody = document.getElementById("termicoTablaBody");
+  if (tbody) {
+    tbody.innerHTML = TERMICO_FANS.map(function (f) {
+      var label = '<span class="cell-strong">' + esc(f.name) + "</span>" +
+        (f.note ? '<div style="font-size:11px;color:var(--muted);font-weight:400;">' + esc(f.note) + "</div>" : "");
+      var hl = f.key === "noctua" ? ' style="background:var(--card-fill-2);"' : "";
+      return "<tr" + hl + "><td>" + label + "</td><td>" + fmt1(f.cfm) + " CFM</td><td>" + fmt1(f.w) + " W</td><td>" + fmt1(f.v) + " m/s</td>" +
+        "<td>" + fmt1(f.tMed) + " °C</td><td>" + fmt1(f.tMax) + " °C</td><td>" + fmt1(f.cMed) + " °C</td><td>" + fmt1(f.cMax) + " °C</td></tr>";
+    }).join("");
+  }
+
+  // --- reproductor cuadro-a-cuadro ---
+  var fanSelect = document.getElementById("termicoFanSelect");
+  var imgEl = document.getElementById("termicoPlayerImg");
+  var sliderEl = document.getElementById("termicoSlider");
+  var readoutEl = document.getElementById("termicoReadout");
+  var playBtn = document.getElementById("termicoPlay");
+
+  if (fanSelect && imgEl && sliderEl) {
+    TERMICO_FANS.forEach(function (f) {
+      var opt = document.createElement("option");
+      opt.value = f.key;
+      opt.textContent = f.name;
+      fanSelect.appendChild(opt);
+    });
+
+    var currentFan = TERMICO_FANS[0].key;
+    var playing = false;
+    var timer = null;
+
+    function stopPlay() {
+      playing = false;
+      playBtn.textContent = "▶ Reproducir";
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+    function updateFrame() {
+      var i = Math.min(parseInt(sliderEl.value, 10), ITERS.length - 1);
+      imgEl.src = "termico-" + currentFan + "-" + ITERS[i] + ".png";
+      readoutEl.textContent = ITERS[i] + " / " + ITERS[ITERS.length - 1] + " iteraciones";
+    }
+    function playAnim() {
+      playing = true;
+      playBtn.textContent = "⏸ Pausar";
+      timer = setInterval(function () {
+        var i = parseInt(sliderEl.value, 10) + 1;
+        if (i > ITERS.length - 1) { stopPlay(); return; }
+        sliderEl.value = i;
+        updateFrame();
+      }, 140);
+    }
+
+    fanSelect.addEventListener("change", function () {
+      currentFan = fanSelect.value;
+      stopPlay();
+      sliderEl.value = ITERS.length - 1;
+      updateFrame();
+    });
+    playBtn.addEventListener("click", function () { playing ? stopPlay() : playAnim(); });
+    sliderEl.addEventListener("input", function () { stopPlay(); updateFrame(); });
+    document.getElementById("termicoPrev").addEventListener("click", function () {
+      stopPlay();
+      sliderEl.value = Math.max(0, parseInt(sliderEl.value, 10) - 1);
+      updateFrame();
+    });
+    document.getElementById("termicoNext").addEventListener("click", function () {
+      stopPlay();
+      sliderEl.value = Math.min(ITERS.length - 1, parseInt(sliderEl.value, 10) + 1);
+      updateFrame();
+    });
+
+    sliderEl.max = ITERS.length - 1;
+    updateFrame();
+  }
+
+  // --- convergencia (residuales p_rgh, downsample real de las 6 corridas) ---
+  var RESIDUALES = {"case_nodo_termico_v1/residuales.json": [[1, 0.98596], [7, 0.20694], [13, 0.06839], [19, 0.05679], [25, 0.04496], [31, 0.03956], [37, 0.0351], [43, 0.03606], [49, 0.03333], [55, 0.03367], [61, 0.03113], [67, 0.03184], [73, 0.11476], [79, 0.04305], [85, 0.03353], [91, 0.03143], [97, 0.03322], [103, 0.03176], [109, 0.03004], [115, 0.02851], [121, 0.02887], [127, 0.02798], [133, 0.04543], [139, 0.02973], [145, 0.02894], [151, 0.02832], [157, 0.02937], [163, 0.02711], [169, 0.02652], [175, 0.02591], [181, 0.02528], [187, 0.02461], [193, 0.02549], [199, 0.02369], [205, 0.02503], [211, 0.02489], [217, 0.02919], [223, 0.02357], [229, 0.02366], [235, 0.02474], [241, 0.02296], [247, 0.02469], [253, 0.02287], [259, 0.02229], [265, 0.02187], [271, 0.02121], [277, 0.02177], [283, 0.02177], [289, 0.0217], [295, 0.02351], [301, 0.02238], [307, 0.02146], [313, 0.02204], [319, 0.02256], [325, 0.02108], [331, 0.02414], [337, 0.02171], [343, 0.02268], [349, 0.02205], [355, 0.02235], [361, 0.02119], [367, 0.02375], [373, 0.0219], [379, 0.0245], [385, 0.02954], [391, 0.02189], [397, 0.02292], [403, 0.03122], [409, 0.02234], [415, 0.02219], [421, 0.02256], [427, 0.02224], [433, 0.02241], [439, 0.02196], [445, 0.0223], [451, 0.02344], [457, 0.02272], [463, 0.02146], [469, 0.02144], [475, 0.02209], [481, 0.02066], [487, 0.02173], [493, 0.02324], [499, 0.0219], [505, 0.02137], [511, 0.02164], [517, 0.02136], [523, 0.02117], [529, 0.02164], [535, 0.0219], [541, 0.0215], [547, 0.02055], [553, 0.02028], [559, 0.02165], [565, 0.0205], [571, 0.02049], [577, 0.02057], [583, 0.02078], [589, 0.02078], [595, 0.02021], [601, 0.02129], [607, 0.02152], [613, 0.02095], [619, 0.02048], [625, 0.02021], [631, 0.02443], [637, 0.01866], [643, 0.03215], [649, 0.01977], [655, 0.02108], [661, 0.01868], [667, 0.01918], [673, 0.01885], [679, 0.02018], [685, 0.01886], [691, 0.01912], [697, 0.01858], [703, 0.01831], [709, 0.02304], [715, 0.01761], [721, 0.01808], [727, 0.0175], [733, 0.01949], [739, 0.01706], [745, 0.01707], [751, 0.01761], [757, 0.01729], [763, 0.01792], [769, 0.01851], [775, 0.01677], [781, 0.08427], [787, 0.01857], [793, 0.02488], [799, 0.01707], [805, 0.01709], [811, 0.01656], [817, 0.01696], [823, 0.0179], [829, 0.01758], [835, 0.01763], [841, 0.01582], [847, 0.01667], [853, 0.01605], [859, 0.0178], [865, 0.01633], [871, 0.01581], [877, 0.01581], [883, 0.01601], [889, 0.01625], [895, 0.01678], [901, 0.35606], [907, 0.02832], [913, 0.01838], [919, 0.0184], [925, 0.01641], [931, 0.01834], [937, 0.02048], [943, 0.0183], [949, 0.01768], [955, 0.01744], [961, 0.01815], [967, 0.01809], [973, 0.01737], [979, 0.018], [985, 0.0174], [991, 0.01707], [997, 0.01883], [1003, 0.01866], [1009, 0.01655], [1015, 0.01736], [1021, 0.01808], [1027, 0.01693], [1033, 0.01659], [1039, 0.01952], [1045, 0.01787], [1051, 0.01725], [1057, 0.01807], [1063, 0.01668], [1069, 0.01629], [1075, 0.01694], [1081, 0.01647], [1087, 0.01569], [1093, 0.01682], [1099, 0.01682], [1105, 0.01733], [1111, 0.01629], [1117, 0.01646], [1123, 0.01762], [1129, 0.0176], [1135, 0.02118], [1141, 0.0171], [1147, 0.01693], [1153, 0.01678], [1159, 0.0177], [1165, 0.01798], [1171, 0.0189], [1177, 0.02], [1183, 0.01612], [1189, 0.01777], [1195, 0.03349], [1200, 0.01728]], "case_nodo_termico_fan_noctua/residuales.json": [[1, 0.99314], [7, 0.21325], [13, 0.07422], [19, 0.06091], [25, 0.05318], [31, 0.04394], [37, 0.03885], [43, 0.03738], [49, 0.03932], [55, 0.03557], [61, 0.06565], [67, 0.03441], [73, 0.03342], [79, 0.03239], [85, 0.05408], [91, 0.03252], [97, 0.03162], [103, 0.27106], [109, 0.0458], [115, 0.03195], [121, 0.03071], [127, 0.0298], [133, 0.0309], [139, 0.03289], [145, 0.03003], [151, 0.03037], [157, 0.03121], [163, 0.02928], [169, 0.0304], [175, 0.02774], [181, 0.02752], [187, 0.02735], [193, 0.02646], [199, 0.02627], [205, 0.02564], [211, 0.02624], [217, 0.02488], [223, 0.0233], [229, 0.02547], [235, 0.02396], [241, 0.0245], [247, 0.02434], [253, 0.02677], [259, 0.02668], [265, 0.02623], [271, 0.07324], [277, 0.03164], [283, 0.02724], [289, 0.02731], [295, 0.02674], [301, 0.02687], [307, 0.02679], [313, 0.02806], [319, 0.02707], [325, 0.02563], [331, 0.02657], [337, 0.02635], [343, 0.02604], [349, 0.02555], [355, 0.02554], [361, 0.02502], [367, 0.02535], [373, 0.02503], [379, 0.02463], [385, 0.02544], [391, 0.02964], [397, 0.02689], [403, 0.02495], [409, 0.02547], [415, 0.02569], [421, 0.02679], [427, 0.02572], [433, 0.02502], [439, 0.02593], [445, 0.02468], [451, 0.02423], [457, 0.02645], [463, 0.02685], [469, 0.02416], [475, 0.02323], [481, 0.02371], [487, 0.02473], [493, 0.02277], [499, 0.02221], [505, 0.02253], [511, 0.02306], [517, 0.0231], [523, 0.02482], [529, 0.02398], [535, 0.02265], [541, 0.02288], [547, 0.0225], [553, 0.02279], [559, 0.02113], [565, 0.02098], [571, 0.02132], [577, 0.02088], [583, 0.0215], [589, 0.0203], [595, 0.0211], [601, 0.02098], [607, 0.02169], [613, 0.0205], [619, 0.0213], [625, 0.02132], [631, 0.02178], [637, 0.01971], [643, 0.01949], [649, 0.02004], [655, 0.02034], [661, 0.01994], [667, 0.02056], [673, 0.0194], [679, 0.02192], [685, 0.02012], [691, 0.0194], [697, 0.01954], [703, 0.01984], [709, 0.01951], [715, 0.01998], [721, 0.01967], [727, 0.06445], [733, 0.02066], [739, 0.01849], [745, 0.01889], [751, 0.02073], [757, 0.01964], [763, 0.02093], [769, 0.01921], [775, 0.01848], [781, 0.02289], [787, 0.01806], [793, 0.01869], [799, 0.01867], [805, 0.02279], [811, 0.01786], [817, 0.01716], [823, 0.01898], [829, 0.01927], [835, 0.01905], [841, 0.02607], [847, 0.01976], [853, 0.02395], [859, 0.01813], [865, 0.0192], [871, 0.01771], [877, 0.01809], [883, 0.01776], [889, 0.01763], [895, 0.0178], [901, 0.01691], [907, 0.01725], [913, 0.0174], [919, 0.0175], [925, 0.01774], [931, 0.01708], [937, 0.01679], [943, 0.01725], [949, 0.01743], [955, 0.0167], [961, 0.01784], [967, 0.01718], [973, 0.01742], [979, 0.0172], [985, 0.01797], [991, 0.01923], [997, 0.01761], [1003, 0.01736], [1009, 0.01746], [1015, 0.05389], [1021, 0.01925], [1027, 0.01814], [1033, 0.01799], [1039, 0.01757], [1045, 0.01804], [1051, 0.01865], [1057, 0.0181], [1063, 0.01934], [1069, 0.01906], [1075, 0.02068], [1081, 0.01758], [1087, 0.01779], [1093, 0.02255], [1099, 0.0191], [1105, 0.01776], [1111, 0.01816], [1117, 0.01784], [1123, 0.01754], [1129, 0.01727], [1135, 0.01884], [1141, 0.01886], [1147, 0.0232], [1153, 0.01837], [1159, 0.0174], [1165, 0.01866], [1171, 0.01713], [1177, 0.01691], [1183, 0.0172], [1189, 0.01791], [1195, 0.01731], [1200, 0.01703]], "case_nodo_termico_fan_bequiet/residuales.json": [[1, 0.99008], [7, 0.20931], [13, 0.07058], [19, 0.05888], [25, 0.04696], [31, 0.04156], [37, 0.03705], [43, 0.03695], [49, 0.03489], [55, 0.03369], [61, 0.03588], [67, 0.03305], [73, 0.03287], [79, 0.03759], [85, 0.03502], [91, 0.03103], [97, 0.0317], [103, 0.03168], [109, 0.03017], [115, 0.02871], [121, 0.02993], [127, 0.02932], [133, 0.03044], [139, 0.02945], [145, 0.02747], [151, 0.02925], [157, 0.02875], [163, 0.02794], [169, 0.02759], [175, 0.02615], [181, 0.02912], [187, 0.02766], [193, 0.02716], [199, 0.02718], [205, 0.02531], [211, 0.02437], [217, 0.02542], [223, 0.02446], [229, 0.02604], [235, 0.02677], [241, 0.02324], [247, 0.02407], [253, 0.02535], [259, 0.02321], [265, 0.02393], [271, 0.02506], [277, 0.02365], [283, 0.02786], [289, 0.02514], [295, 0.0271], [301, 0.02361], [307, 0.02365], [313, 0.02367], [319, 0.02719], [325, 0.02419], [331, 0.02388], [337, 0.0247], [343, 0.0236], [349, 0.02505], [355, 0.02332], [361, 0.02333], [367, 0.02277], [373, 0.02668], [379, 0.02322], [385, 0.02338], [391, 0.02362], [397, 0.02412], [403, 0.0234], [409, 0.02312], [415, 0.02301], [421, 0.02387], [427, 0.02313], [433, 0.02728], [439, 0.02358], [445, 0.0235], [451, 0.02405], [457, 0.0233], [463, 0.02416], [469, 0.02355], [475, 0.02256], [481, 0.02298], [487, 0.02243], [493, 0.02168], [499, 0.02305], [505, 0.0226], [511, 0.02303], [517, 0.02339], [523, 0.02367], [529, 0.02283], [535, 0.02221], [541, 0.02574], [547, 0.0223], [553, 0.02293], [559, 0.02158], [565, 0.02175], [571, 0.02073], [577, 0.02164], [583, 0.02256], [589, 0.02167], [595, 0.02285], [601, 0.02233], [607, 0.02273], [613, 0.02149], [619, 0.02065], [625, 0.02082], [631, 0.0258], [637, 0.02062], [643, 0.02005], [649, 0.01978], [655, 0.0188], [661, 0.01938], [667, 0.02057], [673, 0.02105], [679, 0.01942], [685, 0.01948], [691, 0.01933], [697, 0.01993], [703, 0.02005], [709, 0.01924], [715, 0.01895], [721, 0.01911], [727, 0.04842], [733, 0.02625], [739, 0.02032], [745, 0.01848], [751, 0.01817], [757, 0.01885], [763, 0.01829], [769, 0.01826], [775, 0.01872], [781, 0.02035], [787, 0.01949], [793, 0.01747], [799, 0.01847], [805, 0.01777], [811, 0.01688], [817, 0.01786], [823, 0.01789], [829, 0.02807], [835, 0.01688], [841, 0.01662], [847, 0.01742], [853, 0.01727], [859, 0.01782], [865, 0.01678], [871, 0.01726], [877, 0.01789], [883, 0.0167], [889, 0.01796], [895, 0.0245], [901, 0.01737], [907, 0.01845], [913, 0.01724], [919, 0.01729], [925, 0.01835], [931, 0.0178], [937, 0.01724], [943, 0.01831], [949, 0.01855], [955, 0.01783], [961, 0.01756], [967, 0.01814], [973, 0.01737], [979, 0.01785], [985, 0.03775], [991, 0.02399], [997, 0.01916], [1003, 0.01887], [1009, 0.01884], [1015, 0.01784], [1021, 0.01721], [1027, 0.01801], [1033, 0.01877], [1039, 0.01906], [1045, 0.0202], [1051, 0.02993], [1057, 0.01926], [1063, 0.01728], [1069, 0.01833], [1075, 0.02462], [1081, 0.01833], [1087, 0.01811], [1093, 0.0289], [1099, 0.01918], [1105, 0.01921], [1111, 0.01786], [1117, 0.01791], [1123, 0.01745], [1129, 0.01796], [1135, 0.02135], [1141, 0.01706], [1147, 0.01798], [1153, 0.01798], [1159, 0.01721], [1165, 0.0183], [1171, 0.01719], [1177, 0.01902], [1183, 0.01735], [1189, 0.01847], [1195, 0.01688], [1200, 0.01707]], "case_nodo_termico_fan_corsair/residuales.json": [[1, 0.9881], [7, 0.20783], [13, 0.06947], [19, 0.05742], [25, 0.04604], [31, 0.04063], [37, 0.03736], [43, 0.03644], [49, 0.03429], [55, 0.03326], [61, 0.0317], [67, 0.03312], [73, 0.03591], [79, 0.03176], [85, 0.03188], [91, 0.03265], [97, 0.03174], [103, 0.03684], [109, 0.0288], [115, 0.02924], [121, 0.02831], [127, 0.03511], [133, 0.03752], [139, 0.02856], [145, 0.0273], [151, 0.02834], [157, 0.0284], [163, 0.02727], [169, 0.02619], [175, 0.02634], [181, 0.02522], [187, 0.02547], [193, 0.02381], [199, 0.02439], [205, 0.02401], [211, 0.0235], [217, 0.02631], [223, 0.02325], [229, 0.02357], [235, 0.02668], [241, 0.02278], [247, 0.02351], [253, 0.0228], [259, 0.05937], [265, 0.02347], [271, 0.02307], [277, 0.024], [283, 0.02221], [289, 0.0289], [295, 0.02537], [301, 0.02242], [307, 0.02283], [313, 0.02292], [319, 0.02338], [325, 0.0231], [331, 0.02335], [337, 0.02288], [343, 0.02468], [349, 0.02358], [355, 0.02224], [361, 0.02302], [367, 0.02199], [373, 0.0222], [379, 0.02326], [385, 0.02302], [391, 0.02302], [397, 0.02185], [403, 0.02367], [409, 0.02803], [415, 0.0228], [421, 0.02355], [427, 0.02482], [433, 0.02307], [439, 0.02702], [445, 0.02365], [451, 0.02259], [457, 0.02373], [463, 0.02163], [469, 0.02321], [475, 0.74437], [481, 0.08468], [487, 0.03915], [493, 0.03076], [499, 0.02919], [505, 0.02647], [511, 0.02527], [517, 0.02488], [523, 0.02595], [529, 0.02453], [535, 0.02514], [541, 0.02519], [547, 0.02566], [553, 0.02499], [559, 0.02554], [565, 0.02453], [571, 0.02323], [577, 0.0234], [583, 0.02242], [589, 0.02133], [595, 0.02182], [601, 0.02253], [607, 0.02177], [613, 0.02134], [619, 0.02459], [625, 0.02094], [631, 0.01995], [637, 0.02005], [643, 0.02005], [649, 0.0197], [655, 0.06615], [661, 0.02075], [667, 0.01996], [673, 0.02032], [679, 0.02008], [685, 0.01966], [691, 0.01964], [697, 0.01987], [703, 0.01998], [709, 0.0194], [715, 0.01855], [721, 0.02224], [727, 0.01935], [733, 0.01899], [739, 0.01971], [745, 0.01849], [751, 0.01847], [757, 0.01909], [763, 0.02693], [769, 0.0178], [775, 0.01787], [781, 0.01845], [787, 0.01758], [793, 0.01738], [799, 0.01716], [805, 0.01783], [811, 0.01845], [817, 0.01758], [823, 0.01755], [829, 0.01755], [835, 0.01665], [841, 0.01728], [847, 0.01716], [853, 0.01864], [859, 0.01718], [865, 0.01747], [871, 0.02039], [877, 0.01835], [883, 0.01731], [889, 0.02006], [895, 0.01739], [901, 0.01885], [907, 0.01688], [913, 0.01736], [919, 0.01717], [925, 0.01803], [931, 0.01741], [937, 0.01759], [943, 0.01823], [949, 0.01777], [955, 0.01754], [961, 0.01723], [967, 0.01882], [973, 0.01954], [979, 0.01801], [985, 0.0176], [991, 0.01764], [997, 0.01804], [1003, 0.0199], [1009, 0.01715], [1015, 0.01737], [1021, 0.02285], [1027, 0.01721], [1033, 0.0182], [1039, 0.01832], [1045, 0.01723], [1051, 0.01788], [1057, 0.02013], [1063, 0.01653], [1069, 0.01737], [1075, 0.0174], [1081, 0.01741], [1087, 0.01726], [1093, 0.01748], [1099, 0.01699], [1105, 0.01706], [1111, 0.01652], [1117, 0.01738], [1123, 0.01853], [1129, 0.018], [1135, 0.0192], [1141, 0.01692], [1147, 0.01812], [1153, 0.01766], [1159, 0.01592], [1165, 0.01792], [1171, 0.01661], [1177, 0.01692], [1183, 0.01701], [1189, 0.01625], [1195, 0.01711], [1200, 0.01707]], "case_nodo_termico_fan_arctic_co/residuales.json": [[1, 0.98388], [7, 0.20579], [13, 0.067], [19, 0.05534], [25, 0.04439], [31, 0.03847], [37, 0.03565], [43, 0.03373], [49, 0.033], [55, 0.03209], [61, 0.03132], [67, 0.03049], [73, 0.03413], [79, 0.03216], [85, 0.03192], [91, 0.02952], [97, 0.02939], [103, 0.0546], [109, 0.02842], [115, 0.02724], [121, 0.02572], [127, 0.02938], [133, 0.02646], [139, 0.02747], [145, 0.02507], [151, 0.02532], [157, 0.0245], [163, 0.02414], [169, 0.05171], [175, 0.0256], [181, 0.02301], [187, 0.02412], [193, 0.09571], [199, 0.03747], [205, 0.02929], [211, 0.02621], [217, 0.02521], [223, 0.02467], [229, 0.02621], [235, 0.0233], [241, 0.02357], [247, 0.02449], [253, 0.02317], [259, 0.02336], [265, 0.02307], [271, 0.02648], [277, 0.02256], [283, 0.0216], [289, 0.03527], [295, 0.02222], [301, 0.02099], [307, 0.02038], [313, 0.02004], [319, 0.0204], [325, 0.02198], [331, 0.02165], [337, 0.02094], [343, 0.02141], [349, 0.02174], [355, 0.02068], [361, 0.02031], [367, 0.02142], [373, 0.02141], [379, 0.02134], [385, 0.02283], [391, 0.02151], [397, 0.0212], [403, 0.02041], [409, 0.02166], [415, 0.04589], [421, 0.02123], [427, 0.02216], [433, 0.02136], [439, 0.0218], [445, 0.02681], [451, 0.02186], [457, 0.02142], [463, 0.01994], [469, 0.02139], [475, 0.02107], [481, 0.02107], [487, 0.02034], [493, 0.0206], [499, 0.01942], [505, 0.02035], [511, 0.02052], [517, 0.02087], [523, 0.01991], [529, 0.02054], [535, 0.02117], [541, 0.01986], [547, 0.02271], [553, 0.02045], [559, 0.02087], [565, 0.01988], [571, 0.01955], [577, 0.01919], [583, 0.01978], [589, 0.02052], [595, 0.02197], [601, 0.01923], [607, 0.02034], [613, 0.02075], [619, 0.02229], [625, 0.01908], [631, 0.01886], [637, 0.02129], [643, 0.01955], [649, 0.02141], [655, 0.01857], [661, 0.01862], [667, 0.01851], [673, 0.01863], [679, 0.01786], [685, 0.01844], [691, 0.01777], [697, 0.01845], [703, 0.01855], [709, 0.01928], [715, 0.01883], [721, 0.01811], [727, 0.01793], [733, 0.01837], [739, 0.01962], [745, 0.01882], [751, 0.01759], [757, 0.01863], [763, 0.01748], [769, 0.01753], [775, 0.01719], [781, 0.01734], [787, 0.01597], [793, 0.01708], [799, 0.01584], [805, 0.01774], [811, 0.01587], [817, 0.01582], [823, 0.01573], [829, 0.01577], [835, 0.01489], [841, 0.0158], [847, 0.01893], [853, 0.01549], [859, 0.01515], [865, 0.01571], [871, 0.01524], [877, 0.01551], [883, 0.01546], [889, 0.01794], [895, 0.01592], [901, 0.01495], [907, 0.0159], [913, 0.01553], [919, 0.01719], [925, 0.01642], [931, 0.01563], [937, 0.01598], [943, 0.01632], [949, 0.01654], [955, 0.0155], [961, 0.01595], [967, 0.01599], [973, 0.01752], [979, 0.01571], [985, 0.01645], [991, 0.01583], [997, 0.01627], [1003, 0.035], [1009, 0.04893], [1015, 0.01662], [1021, 0.0173], [1027, 0.01641], [1033, 0.01626], [1039, 0.01691], [1045, 0.01596], [1051, 0.01521], [1057, 0.01547], [1063, 0.01864], [1069, 0.01715], [1075, 0.01909], [1081, 0.01716], [1087, 0.01581], [1093, 0.0171], [1099, 0.01621], [1105, 0.01619], [1111, 0.01623], [1117, 0.01852], [1123, 0.01735], [1129, 0.01609], [1135, 0.01613], [1141, 0.01561], [1147, 0.01638], [1153, 0.0155], [1159, 0.01575], [1165, 0.01733], [1171, 0.01535], [1177, 0.01568], [1183, 0.01544], [1189, 0.01593], [1195, 0.01521], [1200, 0.01515]], "case_nodo_termico_fan_arctic_ln/residuales.json": [[1, 0.98128], [7, 0.20397], [13, 0.06521], [19, 0.05301], [25, 0.04339], [31, 0.03834], [37, 0.03425], [43, 0.03299], [49, 0.03078], [55, 0.03026], [61, 0.02932], [67, 0.03002], [73, 0.03004], [79, 0.02985], [85, 0.02954], [91, 0.02993], [97, 0.02788], [103, 0.02604], [109, 0.0277], [115, 0.02553], [121, 0.02445], [127, 0.02583], [133, 0.02697], [139, 0.025], [145, 0.02431], [151, 0.0233], [157, 0.02322], [163, 0.02616], [169, 0.06235], [175, 0.02402], [181, 0.02403], [187, 0.02107], [193, 0.07993], [199, 0.02192], [205, 0.0228], [211, 0.02214], [217, 0.02205], [223, 0.02468], [229, 0.02081], [235, 0.02974], [241, 0.01993], [247, 0.04636], [253, 0.02055], [259, 0.0197], [265, 0.01867], [271, 0.01873], [277, 0.01956], [283, 0.0184], [289, 0.01922], [295, 0.01984], [301, 0.02741], [307, 0.01894], [313, 0.0241], [319, 0.01902], [325, 0.02001], [331, 0.02064], [337, 0.01938], [343, 0.01949], [349, 0.01967], [355, 0.0199], [361, 0.02094], [367, 0.02112], [373, 0.02071], [379, 0.01988], [385, 0.01954], [391, 0.01889], [397, 0.01973], [403, 0.01978], [409, 0.01948], [415, 0.01966], [421, 0.01986], [427, 0.01915], [433, 0.02], [439, 0.0198], [445, 0.01918], [451, 0.02], [457, 0.02047], [463, 0.01955], [469, 0.01889], [475, 0.02016], [481, 0.01888], [487, 0.01944], [493, 0.01944], [499, 0.01911], [505, 0.01967], [511, 0.01846], [517, 0.0193], [523, 0.02062], [529, 0.01893], [535, 0.01926], [541, 0.01896], [547, 0.01872], [553, 0.01893], [559, 0.01883], [565, 0.01971], [571, 0.01792], [577, 0.01814], [583, 0.0188], [589, 0.01915], [595, 0.01955], [601, 0.01888], [607, 0.01864], [613, 0.02181], [619, 0.02214], [625, 0.01861], [631, 0.01843], [637, 0.02503], [643, 0.01816], [649, 0.01858], [655, 0.0175], [661, 0.01724], [667, 0.01754], [673, 0.01644], [679, 0.01696], [685, 0.01789], [691, 0.0171], [697, 0.04954], [703, 0.02033], [709, 0.02068], [715, 0.01662], [721, 0.01754], [727, 0.01629], [733, 0.01682], [739, 0.01696], [745, 0.01684], [751, 0.01613], [757, 0.01765], [763, 0.01811], [769, 0.01733], [775, 0.01902], [781, 0.01632], [787, 0.01616], [793, 0.01496], [799, 0.01522], [805, 0.01604], [811, 0.01611], [817, 0.01461], [823, 0.01583], [829, 0.01536], [835, 0.01401], [841, 0.01433], [847, 0.01519], [853, 0.01422], [859, 0.01384], [865, 0.03394], [871, 0.01534], [877, 0.0143], [883, 0.01489], [889, 0.01442], [895, 0.01417], [901, 0.01426], [907, 0.01324], [913, 0.01485], [919, 0.01464], [925, 0.01453], [931, 0.01399], [937, 0.01402], [943, 0.0152], [949, 0.01602], [955, 0.0146], [961, 0.01504], [967, 0.01766], [973, 0.01564], [979, 0.01454], [985, 0.01504], [991, 0.01895], [997, 0.01558], [1003, 0.01474], [1009, 0.01557], [1015, 0.0144], [1021, 0.01582], [1027, 0.01431], [1033, 0.07365], [1039, 0.01996], [1045, 0.01429], [1051, 0.01495], [1057, 0.01759], [1063, 0.01519], [1069, 0.01495], [1075, 0.01439], [1081, 0.01506], [1087, 0.01479], [1093, 0.01505], [1099, 0.01485], [1105, 0.01432], [1111, 0.0144], [1117, 0.01464], [1123, 0.01596], [1129, 0.01493], [1135, 0.01517], [1141, 0.01454], [1147, 0.01483], [1153, 0.01521], [1159, 0.01596], [1165, 0.01464], [1171, 0.01447], [1177, 0.01386], [1183, 0.01624], [1189, 0.01769], [1195, 0.01525], [1200, 0.01507]]};
+
+  var SERIES = [
+    { key: "case_nodo_termico_v1/residuales.json", name: "RUI ZHAN (actual)", color: "#2A78D6" },
+    { key: "case_nodo_termico_fan_noctua/residuales.json", name: "Noctua NF-F12", color: "#1BAF7A" },
+    { key: "case_nodo_termico_fan_bequiet/residuales.json", name: "be quiet! SW Pro 4", color: "#EDA100" },
+    { key: "case_nodo_termico_fan_corsair/residuales.json", name: "Corsair RS120", color: "#E4544D" },
+    { key: "case_nodo_termico_fan_arctic_co/residuales.json", name: "ARCTIC P12 CO", color: "#4FD8EE" },
+    { key: "case_nodo_termico_fan_arctic_ln/residuales.json", name: "ARCTIC P12 LN", color: "#FF8C00" }
+  ];
+
+  function drawTermicoChart() {
+    var svg = document.getElementById("termicoChart");
+    if (!svg) return;
+    var padL = 55, padR = 20, padT = 16, padB = 34;
+    var plotW = 1000 - padL - padR, plotH = 360 - padT - padB;
+    var xMax = 1200;
+
+    var allVals = [];
+    SERIES.forEach(function (s) { (RESIDUALES[s.key] || []).forEach(function (p) { allVals.push(p[1]); }); });
+    var yMin = Math.max(1e-4, Math.min.apply(null, allVals));
+    var yMax = Math.max.apply(null, allVals);
+    var logMin = Math.log10(yMin), logMax = Math.log10(yMax);
+
+    function xPos(iter) { return padL + (iter / xMax) * plotW; }
+    function yPos(val) {
+      var v = Math.max(val, yMin);
+      return padT + plotH - ((Math.log10(v) - logMin) / (logMax - logMin)) * plotH;
+    }
+
+    var svgns = "http://www.w3.org/2000/svg";
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    [0, 200, 400, 600, 800, 1000, 1200].forEach(function (iter) {
+      var line = document.createElementNS(svgns, "line");
+      line.setAttribute("x1", xPos(iter)); line.setAttribute("x2", xPos(iter));
+      line.setAttribute("y1", padT); line.setAttribute("y2", padT + plotH);
+      line.setAttribute("stroke", "#221F42"); line.setAttribute("stroke-width", "1");
+      svg.appendChild(line);
+      var label = document.createElementNS(svgns, "text");
+      label.setAttribute("x", xPos(iter)); label.setAttribute("y", padT + plotH + 18);
+      label.setAttribute("fill", "#8D87B8"); label.setAttribute("font-size", "10"); label.setAttribute("text-anchor", "middle");
+      label.textContent = iter;
+      svg.appendChild(label);
+    });
+
+    SERIES.forEach(function (s) {
+      var data = RESIDUALES[s.key] || [];
+      if (!data.length) return;
+      var pts = data.map(function (p) { return xPos(p[0]) + "," + yPos(p[1]); }).join(" ");
+      var poly = document.createElementNS(svgns, "polyline");
+      poly.setAttribute("points", pts);
+      poly.setAttribute("fill", "none");
+      poly.setAttribute("stroke", s.color);
+      poly.setAttribute("stroke-width", "1.6");
+      svg.appendChild(poly);
+    });
+
+    var legend = document.getElementById("termicoLegend");
+    if (legend) {
+      legend.innerHTML = SERIES.map(function (s) {
+        return '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:' + s.color + ';display:inline-block;"></span>' + esc(s.name) + "</span>";
+      }).join("");
+    }
+  }
+  drawTermicoChart();
 })();
 </script>
 <script src="app.js"></script>
