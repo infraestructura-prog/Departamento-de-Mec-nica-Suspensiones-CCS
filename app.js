@@ -96,18 +96,6 @@ function fmtMoney(n) {
   return "$" + fmtNum(n, 2);
 }
 
-// Función auxiliar para obtener el Lunes de la semana correspondiente
-function getInicioSemana(fechaStr) {
-  if (!fechaStr) return "(sin fecha)";
-  // Añadimos T00:00:00 para evitar saltos de día por zona horaria
-  const d = new Date(fechaStr.includes('T') ? fechaStr : fechaStr + "T00:00:00");
-  if (isNaN(d.getTime())) return fechaStr; // Si la celda tiene texto raro, devuelve el texto
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Ajusta al Lunes
-  const lunes = new Date(d.setDate(diff));
-  return lunes.toISOString().split('T')[0];
-}
-
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -451,58 +439,6 @@ function renderHistorial() {
     kpiCard("Horas de impresión", fmtNum(minutosTotal / 60, 1) + " h", { accent: PALETTE.aqua }),
   ].join("");
 
-  // >>> INICIO GRÁFICO SEMANAL APILADO <<<
-  const porSemana = {};
-  const materialesVistos = new Set();
-
-  // 1. Agrupar la cantidad (gramos) por cada inicio de semana y por cada material
-  state.historial.forEach((r) => {
-    const dia = r[2] || "";
-    const semana = getInicioSemana(dia);
-    const mat = r[6] || "(Sin material)";
-    const gramos = parseNum(r[3]);
-
-    if (!porSemana[semana]) porSemana[semana] = {};
-    porSemana[semana][mat] = (porSemana[semana][mat] || 0) + gramos;
-    materialesVistos.add(mat);
-  });
-
-  // 2. Ordenar las semanas cronológicamente
-  const semanasSort = Object.keys(porSemana).sort();
-  const matsArray = Array.from(materialesVistos).sort();
-
-  // 3. Crear los bloques (datasets) por cada material encontrado
-  const colorList = [PALETTE.blue, PALETTE.bad, PALETTE.yellow, PALETTE.aqua, "#7C6CD6", "#1BAF7A"];
-  const datasetsSemanal = matsArray.map((mat, i) => ({
-    label: mat,
-    data: semanasSort.map(w => porSemana[w][mat] || 0),
-    backgroundColor: colorList[i % colorList.length],
-    borderRadius: 4
-  }));
-
-  // 4. Dibujar el gráfico integrándose con tu función base baseChartOptions
-  makeChart("chartHistorialSemanal", {
-    type: "bar",
-    data: {
-      labels: semanasSort,
-      datasets: datasetsSemanal
-    },
-    options: baseChartOptions({
-      plugins: {
-        legend: { 
-          display: true, 
-          position: 'top',
-          labels: { color: PALETTE.ink2, font: { size: 11 } }
-        }
-      },
-      scales: {
-        x: { stacked: true },
-        y: { stacked: true }
-      }
-    })
-  });
-  // >>> FIN GRÁFICO SEMANAL APILADO <<<
-
   // tendencia por día — vista fija, siempre con todo el histórico (no reacciona al filtro)
   const porDia = {};
   state.historial.forEach((r) => {
@@ -842,12 +778,50 @@ async function refresh() {
 // ----------------------------------------------------------------- tabs ----
 
 function setupTabs() {
+  const groupNav = document.getElementById("groupNav");
+  const groupTabNavs = document.querySelectorAll("[data-group-tabs]");
+  const showPanel = (id) => {
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+    document.getElementById("panel-" + id).classList.add("active");
+  };
+
+  // Sub-pestañas (dentro de cada grupo de Proyecto 3D)
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+      btn.parentElement.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
-      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+      showPanel(btn.dataset.tab);
+    });
+  });
+
+  // Grupos: Telemetría impresión / NODO
+  const showGroup = (name) => {
+    groupNav.querySelectorAll(".group-btn").forEach((b) => b.classList.toggle("active", b.dataset.group === name));
+    groupTabNavs.forEach((n) => { n.hidden = n.dataset.groupTabs !== name; });
+    const nav = document.querySelector('[data-group-tabs="' + name + '"]');
+    (nav.querySelector(".tab-btn.active") || nav.querySelector(".tab-btn")).click();
+  };
+  groupNav.querySelectorAll(".group-btn").forEach((btn) => {
+    btn.addEventListener("click", () => showGroup(btn.dataset.group));
+  });
+
+  // Secciones maestras
+  document.querySelectorAll(".master-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".master-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      if (btn.dataset.master === "proyecto3d") {
+        groupNav.hidden = false;
+        const active = groupNav.querySelector(".group-btn.active");
+        showGroup(active ? active.dataset.group : "telemetria");
+      } else {
+        groupNav.hidden = true;
+        // Una sección maestra puede tener su propia fila de sub-pestañas (data-group-tabs="<master>")
+        const ownNav = document.querySelector('[data-group-tabs="' + btn.dataset.master + '"]');
+        groupTabNavs.forEach((n) => { n.hidden = n !== ownNav; });
+        if (ownNav) (ownNav.querySelector(".tab-btn.active") || ownNav.querySelector(".tab-btn")).click();
+        else showPanel(btn.dataset.master);
+      }
     });
   });
 }
