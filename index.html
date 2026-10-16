@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261016a">
+<link rel="stylesheet" href="style.css?v=20261016d">
 </head>
 <body>
 
@@ -38,6 +38,7 @@
     <button class="master-btn" data-master="proyecto3d">Proyecto 3D</button>
     <button class="master-btn" data-master="ingenieria">Proyectos de Ingeniería</button>
     <button class="master-btn" data-master="infra">Infraestructura y Mantenimiento</button>
+    <button class="master-btn" data-master="compras">Compras</button>
     <button class="master-btn" data-master="equipo">Equipo</button>
   </nav>
   <nav class="tabs group-nav" id="groupNav" aria-label="Subsecciones de Proyecto 3D" hidden>
@@ -57,6 +58,13 @@
     <button class="tab-btn" data-tab="nodos">NODOS</button>
     <button class="tab-btn" data-tab="termico">Térmica NODO</button>
     <button class="tab-btn" data-tab="filtros">Filtros</button>
+  </nav>
+  <nav class="tabs sub-nav" id="tabNav-infra" data-group-tabs="infra" hidden>
+    <button class="tab-btn" data-tab="equipos">Equipos</button>
+  </nav>
+  <nav class="tabs sub-nav" id="tabNav-compras" data-group-tabs="compras" hidden>
+    <button class="tab-btn" data-tab="presupuesto">Presupuesto</button>
+    <button class="tab-btn" data-tab="comparativa">Comparativa</button>
   </nav>
   <nav class="tabs sub-nav" id="tabNav-ingenieria" data-group-tabs="ingenieria" hidden>
     <button class="tab-btn" data-tab="ingenieria">Kanban</button>
@@ -985,15 +993,180 @@
     </div>
   </section>
 
-  <!-- ================= INFRAESTRUCTURA Y MANTENIMIENTO ================= -->
-  <section class="tab-panel" id="panel-infra">
-    <div class="section-head">
-      <h2>Infraestructura y Mantenimiento</h2>
-      <p class="section-sub">Sección en construcción — próximamente.</p>
+  <!-- ================= COMPRAS · PRESUPUESTO ================= -->
+  <section class="tab-panel" id="panel-presupuesto">
+    <div class="section-head kb-head">
+      <div>
+        <h2>Presupuesto de compras</h2>
+        <p class="section-sub">Arma una lista de compra, ajusta precios y cantidades, y aprueba o descarta cada artículo contra el presupuesto disponible.</p>
+      </div>
+      <div class="kb-actions">
+        <span id="cpStatus" class="kb-status"></span>
+        <button type="button" id="cpImportBtn" class="kb-btn" disabled>Pegar lista</button>
+        <button type="button" id="cpCsvBtn" class="kb-btn" disabled>Exportar CSV</button>
+        <button type="button" id="cpPrintBtn" class="kb-btn" disabled>Imprimir / PDF</button>
+        <button type="button" id="cpNew" class="kb-btn kb-btn-primary">+ Nueva lista</button>
+      </div>
     </div>
-    <div class="empty-section">
-      <div class="empty-icon" aria-hidden="true">🛠️</div>
-      <p>Aún no hay contenido en esta sección.</p>
+
+    <div class="pz-list" id="cpList"></div>
+    <div class="pz-empty" id="cpEmpty">Aún no hay listas de compra. Crea la primera con «+ Nueva lista».</div>
+
+    <div id="cpDetail" hidden>
+      <div class="pz-title-row">
+        <input id="cpTitulo" class="kb-title-input pz-title" type="text" placeholder="Nombre de la lista (ej. Compra de herramientas)" maxlength="120">
+        <button type="button" id="cpDelete" class="kb-btn kb-btn-danger">🗑 Eliminar lista</button>
+      </div>
+
+      <div class="cp-layout">
+        <aside class="cp-sum" aria-label="Resumen de la compra">
+          <div class="cp-budget">
+            <label for="cpBudget">Presupuesto disponible</label>
+            <div class="cp-budget-in">
+              <input id="cpBudget" type="number" min="0" step="any" inputmode="decimal" placeholder="0.00">
+              <select id="cpCurrency" aria-label="Moneda">
+                <option value="USD">USD</option><option value="EUR">EUR</option><option value="VES">VES</option>
+                <option value="COP">COP</option><option value="MXN">MXN</option>
+              </select>
+            </div>
+          </div>
+          <div class="cp-figs">
+            <div><span>Aprobado</span><strong id="cpApproved">$0,00</strong></div>
+            <div><span>Comprar todo</span><strong id="cpTotal">$0,00</strong></div>
+            <div><span>Disponible</span><strong id="cpLeft">$0,00</strong></div>
+          </div>
+          <div class="cp-bar" aria-hidden="true"><div class="cp-bar-total" id="cpBarTotal"></div><div class="cp-bar-ok" id="cpBarOk"></div><div class="cp-bar-mark" id="cpBarMark"></div></div>
+          <div class="cp-bar-key"><span><i class="k-ok"></i>Aprobado</span><span><i class="k-all"></i>Comprar todo</span><span><i class="k-mark"></i>Presupuesto</span></div>
+          <p class="cp-msg" id="cpMsg"></p>
+          <div class="cp-counts">
+            <span class="cp-chip ok" id="cpCOk"></span><span class="cp-chip no" id="cpCNo"></span><span class="cp-chip pend" id="cpCPend"></span>
+          </div>
+        </aside>
+
+        <div class="cp-main">
+          <div class="cp-import" id="cpImport" hidden>
+            <h4 class="kb-h" style="margin-top:0">Pegar lista de artículos</h4>
+            <p class="pz-hint">Un artículo por línea (texto de un correo, WhatsApp o columnas copiadas de Excel). Ejemplos:<br>
+              <code>Taladro percutor - $85.50 - 2</code> · <code>Guantes, 4.5, 10 pares</code> · <code>Cable 12 AWG ; 1.2 ; 100 m</code></p>
+            <textarea id="cpImportText" class="kb-desc" rows="6" placeholder="Pega aquí tu lista…"></textarea>
+            <div class="cp-import-bar">
+              <label>Agregar en: <select id="cpImportGroup"></select></label>
+              <span class="pz-hint" id="cpImportPreview"></span>
+              <span class="cp-spacer"></span>
+              <button type="button" class="kb-btn" id="cpImportCancel">Cancelar</button>
+              <button type="button" class="kb-btn kb-btn-primary" id="cpImportAdd">Agregar</button>
+            </div>
+          </div>
+          <div id="cpGroups"></div>
+          <button type="button" class="kb-btn" id="cpAddGroup">+ Agregar grupo</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMPRAS · COMPARATIVA ================= -->
+  <section class="tab-panel" id="panel-comparativa">
+    <div class="section-head kb-head">
+      <div>
+        <h2>Matriz comparativa</h2>
+        <p class="section-sub">Ponderación y ranking por sección. Cada hoja del Excel o Google Sheet es una categoría.</p>
+      </div>
+      <div class="kb-actions">
+        <span id="cmStatus" class="kb-status"></span>
+        <button type="button" id="cmRefresh" class="kb-btn" hidden>↻ Actualizar</button>
+        <button type="button" id="cmChange" class="kb-btn" hidden>Cambiar fuente</button>
+      </div>
+    </div>
+
+    <div class="cm-source" id="cmSource">
+      <div class="cm-source-card">
+        <h3>Elige de dónde traer tus productos</h3>
+        <p class="pz-hint">Cada hoja se convierte en una categoría. Un Excel subido solo vive en tu navegador; para compartirlo con el equipo, conecta un Google Sheets.</p>
+        <div class="cm-srctabs" id="cmSrcTabs">
+          <button type="button" class="cm-srctab active" data-src="excel">Subir Excel</button>
+          <button type="button" class="cm-srctab" data-src="sheets">Google Sheets</button>
+        </div>
+        <div id="cmSrcExcel">
+          <div class="cm-drop" id="cmDrop" tabindex="0">
+            <div class="cm-drop-ico">⬆</div>
+            <div class="cm-drop-title">Arrastra tu archivo aquí</div>
+            <div class="pz-hint">o haz clic para elegirlo (.xlsx, .xls)</div>
+          </div>
+          <input type="file" id="cmFile" accept=".xlsx,.xls" hidden>
+        </div>
+        <div id="cmSrcSheets" hidden>
+          <p class="pz-hint">Pega la URL <code>/exec</code> de tu Apps Script de solo lectura (publicado como Web App con acceso «Cualquier usuario»).</p>
+          <div class="cm-url-row">
+            <input type="url" id="cmUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+            <button type="button" class="kb-btn kb-btn-primary" id="cmConnect">Conectar</button>
+          </div>
+        </div>
+        <div class="cm-err" id="cmErr"></div>
+        <div class="cm-contract">
+          <b>Formato de las hojas</b> (por posición de columna):<br>
+          A Sección · B Marca · C Título · D Imagen (URL) · E:I hasta 5 criterios · J:O hasta 6 características · el resto, «Ver más detalles».<br>
+          Las columnas <code>Set: &lt;parte&gt;</code> suman el precio del «full set».
+        </div>
+      </div>
+    </div>
+
+    <div id="cmApp" hidden>
+      <div class="cm-srcbar"><span class="cm-dot"></span><span id="cmSrcLabel"></span><b id="cmSrcName"></b><span id="cmSrcMeta" class="pz-hint"></span></div>
+      <div class="pz-list" id="cmCats"></div>
+      <div id="cmBody"></div>
+      <div class="pz-card" id="cmVal"></div>
+    </div>
+  </section>
+
+  <!-- ================= INFRAESTRUCTURA Y MANTENIMIENTO ================= -->
+  <section class="tab-panel" id="panel-equipos">
+    <!-- Vista lista: equipos agrupados por categoría -->
+    <div id="eqList">
+      <div class="section-head kb-head">
+        <div>
+          <h2>Equipos</h2>
+          <p class="section-sub">Inventario de equipos del taller, ordenado por código y categoría. Haz clic en un equipo para ver su ficha.</p>
+        </div>
+        <div class="kb-actions">
+          <span id="eqStatus" class="kb-status"></span>
+          <button type="button" id="eqNewCat" class="kb-btn">+ Nueva categoría</button>
+          <button type="button" id="eqNew" class="kb-btn kb-btn-primary">+ Nuevo equipo</button>
+        </div>
+      </div>
+      <div class="eq-toolbar">
+        <input type="search" id="eqQ" placeholder="Buscar por código, nombre, modelo o serial…">
+        <select id="eqCatFilter" aria-label="Categoría"></select>
+      </div>
+      <div id="eqGroups"></div>
+    </div>
+
+    <!-- Vista ficha del equipo -->
+    <div id="eqDetail" hidden>
+      <div class="eq-detail-bar">
+        <button type="button" id="eqBack" class="kb-btn">← Volver a equipos</button>
+        <span id="eqStatus2" class="kb-status"></span>
+        <button type="button" id="eqDelete" class="kb-btn kb-btn-danger">🗑 Eliminar equipo</button>
+      </div>
+      <div class="eq-head">
+        <span class="eq-code-badge" id="eqBadge"></span>
+        <input id="eqNombre" class="kb-title-input" type="text" placeholder="Nombre del equipo" maxlength="120">
+      </div>
+      <div class="eq-detail-grid">
+        <div class="pz-card">
+          <div class="pz-card-head"><h3>Datos del equipo</h3></div>
+          <div class="kb-prop"><label for="eqCodigo">Código</label><input id="eqCodigo" type="text" maxlength="20" placeholder="Ej. EH06"></div>
+          <div class="kb-prop"><label for="eqCategoria">Categoría</label><select id="eqCategoria"></select></div>
+          <div class="kb-prop"><label for="eqModelo">Modelo</label><input id="eqModelo" type="text" maxlength="80" placeholder="Modelo o referencia del fabricante"></div>
+          <div class="kb-prop"><label for="eqSerial">Serial</label><input id="eqSerial" type="text" maxlength="80" placeholder="Número de serie"></div>
+          <h4 class="kb-h">Descripción</h4>
+          <textarea id="eqDescripcion" class="kb-desc" rows="7" placeholder="Para qué se usa, ubicación, capacidad, observaciones…"></textarea>
+        </div>
+        <div class="pz-card">
+          <div class="pz-card-head"><h3>Manuales y documentos</h3><span class="pz-hint">PDF, Word o imágenes (máx. 12 MB c/u).</span></div>
+          <ul class="kb-files" id="eqManuales"></ul>
+          <label class="kb-btn">+ Cargar manual<input type="file" id="eqManualInput" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" multiple hidden></label>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1898,13 +2071,18 @@
   drawTermicoChart();
 })();
 </script>
-<script src="app.js?v=20261016a"></script>
-<script src="config.js?v=20261016a"></script>
-<script src="dialog.js?v=20261016a"></script>
-<script src="kanban.js?v=20261016a"></script>
+<script src="app.js?v=20261016d"></script>
+<script src="config.js?v=20261016d"></script>
+<script src="dialog.js?v=20261016d"></script>
+<script src="kanban.js?v=20261016d"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/STLLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/OBJLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/GLTFLoader.js"></script>
-<script src="presentaciones.js?v=20261016a"></script>
+<script src="presentaciones.js?v=20261016d"></script>
+<script src="shared.js?v=20261016d"></script>
+<script src="compras.js?v=20261016d"></script>
+<script src="comparativa.js?v=20261016d"></script>
+<script src="equipos-seed.js?v=20261016d"></script>
+<script src="equipos.js?v=20261016d"></script>
 </body>
 </html>
