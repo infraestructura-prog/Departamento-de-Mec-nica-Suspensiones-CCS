@@ -32,20 +32,37 @@
   </div>
 </header>
 
-<nav class="tabs" id="tabNav" aria-label="Secciones del inventario">
-  <button class="tab-btn active" data-tab="inicio">Inicio</button>
-  <button class="tab-btn" data-tab="impresiones">Impresiones 3D</button>
-  <button class="tab-btn" data-tab="filamento">Filamento</button>
-  <button class="tab-btn" data-tab="ensamblaje">Ensamblaje</button>
-  <button class="tab-btn" data-tab="historial">Historial Impresoras</button>
-  <button class="tab-btn" data-tab="analisis">Análisis de Datos</button>
-  <button class="tab-btn" data-tab="nodos">NODOS</button>
-  <button class="tab-btn" data-tab="termico">Térmica NODO</button>
-  <button class="tab-btn" data-tab="filtros">Filtros</button>
-  <button class="tab-btn" data-tab="sku">Guía SKU</button>
-  <button class="tab-btn" data-tab="piezas3d">Piezas 3D</button>
-  <button class="tab-btn" data-tab="equipo">Equipo</button>
-</nav>
+<div class="navwrap">
+  <nav class="tabs master-nav" id="masterNav" aria-label="Secciones principales">
+    <button class="master-btn active" data-master="inicio">Inicio</button>
+    <button class="master-btn" data-master="proyecto3d">Proyecto 3D</button>
+    <button class="master-btn" data-master="ingenieria">Proyectos de Ingeniería</button>
+    <button class="master-btn" data-master="infra">Infraestructura y Mantenimiento</button>
+    <button class="master-btn" data-master="equipo">Equipo</button>
+  </nav>
+  <nav class="tabs group-nav" id="groupNav" aria-label="Subsecciones de Proyecto 3D" hidden>
+    <button class="group-btn active" data-group="telemetria">Telemetría impresión</button>
+    <button class="group-btn" data-group="nodo">NODO</button>
+  </nav>
+  <nav class="tabs sub-nav" id="tabNav-telemetria" data-group-tabs="telemetria" hidden>
+    <button class="tab-btn" data-tab="impresiones">Impresiones 3D</button>
+    <button class="tab-btn" data-tab="filamento">Filamento</button>
+    <button class="tab-btn" data-tab="ensamblaje">Ensamblaje</button>
+    <button class="tab-btn" data-tab="historial">Historial Impresoras</button>
+    <button class="tab-btn" data-tab="analisis">Análisis de Datos</button>
+    <button class="tab-btn" data-tab="sku">Guía SKU</button>
+    <button class="tab-btn" data-tab="piezas3d">Piezas 3D</button>
+  </nav>
+  <nav class="tabs sub-nav" id="tabNav-nodo" data-group-tabs="nodo" hidden>
+    <button class="tab-btn" data-tab="nodos">NODOS</button>
+    <button class="tab-btn" data-tab="termico">Térmica NODO</button>
+    <button class="tab-btn" data-tab="filtros">Filtros</button>
+  </nav>
+  <nav class="tabs sub-nav" id="tabNav-ingenieria" data-group-tabs="ingenieria" hidden>
+    <button class="tab-btn" data-tab="ingenieria">Kanban</button>
+    <button class="tab-btn" data-tab="presentaciones">Presentación de proyectos</button>
+  </nav>
+</div>
 
 <main id="app">
 
@@ -841,6 +858,142 @@
     <div class="chart-card wide">
       <div id="viewer3dContainer" class="viewer3d-container"></div>
       <p id="viewer3dStatus" class="filtros-fan-spec">Abre esta pestaña para cargar el modelo…</p>
+    </div>
+  </section>
+
+  <!-- ================= PROYECTOS DE INGENIERÍA ================= -->
+  <section class="tab-panel" id="panel-ingenieria">
+    <div class="section-head kb-head">
+      <div>
+        <h2>Proyectos de Ingeniería</h2>
+        <p class="section-sub">Arrastra las tarjetas entre columnas. Haz clic en una para ver y editar su detalle.</p>
+      </div>
+      <div class="kb-actions">
+        <span id="kanbanStatus" class="kb-status"></span>
+        <button type="button" id="kbNew" class="kb-btn kb-btn-primary">+ Nueva tarjeta</button>
+      </div>
+    </div>
+    <div class="kb-board" id="kanbanBoard"></div>
+
+    <div class="kb-overlay" id="kbOverlay"></div>
+    <aside class="kb-drawer" id="kbDrawer" aria-label="Detalle del proyecto">
+      <div class="kb-drawer-bar">
+        <button type="button" id="kbClose" class="kb-btn" title="Cerrar (Esc)">✕ Cerrar</button>
+        <button type="button" id="kbDelete" class="kb-btn kb-btn-danger">Eliminar</button>
+      </div>
+      <div class="kb-drawer-body">
+        <div class="kb-photo" id="kbPhoto"></div>
+        <div class="kb-photo-actions">
+          <label class="kb-btn">Subir foto<input type="file" id="kbPhotoInput" accept="image/*" hidden></label>
+          <button type="button" id="kbPhotoRemove" class="kb-btn" hidden>Quitar foto</button>
+        </div>
+        <input id="kbTitulo" class="kb-title-input" type="text" placeholder="Nombre del proyecto" maxlength="120">
+
+        <div class="kb-prop"><label for="kbEstado">Estado</label><select id="kbEstado"></select></div>
+        <div class="kb-prop"><label for="kbIngeniero">Ingeniero encargado</label>
+          <input id="kbIngeniero" type="text" list="kbIngenieros" placeholder="Nombre"><datalist id="kbIngenieros"></datalist></div>
+        <div class="kb-prop"><label for="kbInicio">Fecha de inicio</label><input id="kbInicio" type="date"></div>
+        <div class="kb-prop"><label for="kbFin">Fecha final</label><input id="kbFin" type="date"></div>
+        <div class="kb-prop kb-prop-top"><label for="kbProveedor">Contacto de proveedor</label>
+          <textarea id="kbProveedor" rows="3" placeholder="Empresa, nombre, teléfono, correo…"></textarea></div>
+
+        <h4 class="kb-h">Descripción</h4>
+        <textarea id="kbDescripcion" class="kb-desc" rows="5" placeholder="Descripción breve del proyecto…"></textarea>
+
+        <h4 class="kb-h">Facturas</h4>
+        <ul class="kb-files" id="kbFacturas"></ul>
+        <label class="kb-btn">+ Cargar factura<input type="file" id="kbFacturaInput" accept=".pdf,image/*,.xlsx,.xls,.doc,.docx" multiple hidden></label>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ================= PRESENTACIÓN DE PROYECTOS (Ingeniería) ================= -->
+  <section class="tab-panel" id="panel-presentaciones">
+    <div class="section-head kb-head">
+      <div>
+        <h2>Presentación de proyectos</h2>
+        <p class="section-sub">Propuestas con modelo 3D, descripción de uso, presupuestos por material y mano de obra.</p>
+      </div>
+      <div class="kb-actions">
+        <span id="pzStatus" class="kb-status"></span>
+        <button type="button" id="pzPresent" class="kb-btn" disabled title="Ver la propuesta en modo solo lectura">▶ Presentar</button>
+        <button type="button" id="pzNew" class="kb-btn kb-btn-primary">+ Nueva propuesta</button>
+      </div>
+    </div>
+
+    <button type="button" id="pzExit" class="kb-btn pz-exit" hidden>✕ Salir de la presentación</button>
+    <div class="pz-list" id="pzList"></div>
+
+    <div class="pz-empty" id="pzEmpty">Aún no hay propuestas. Crea la primera con «+ Nueva propuesta».</div>
+
+    <div class="pz-detail" id="pzDetail" hidden>
+      <div class="pz-title-row">
+        <input id="pzTitulo" class="kb-title-input pz-title" type="text" placeholder="Nombre de la propuesta" maxlength="120">
+        <button type="button" id="pzDelete" class="kb-btn kb-btn-danger" title="Elimina la propuesta completa: modelo, foto, presupuestos y mano de obra">🗑 Eliminar propuesta</button>
+      </div>
+      <div class="pz-top">
+        <div class="pz-viewer-col">
+          <div class="pz-viewer" id="pzViewer"></div>
+          <div class="pz-viewer-bar">
+            <span id="pzViewerStatus" class="pz-viewer-status">Sin modelo 3D</span>
+            <label class="kb-btn">Cargar modelo 3D<input type="file" id="pzModelInput" accept=".step,.stp,.stl,.obj,.glb" hidden></label>
+            <button type="button" id="pzModelRemove" class="kb-btn" hidden>Quitar</button>
+          </div>
+          <div class="pz-hint">Formatos: STEP, STL, OBJ, GLB (máx. 12 MB). Arrastra para rotar, rueda para zoom.</div>
+        </div>
+        <div class="pz-photo-col">
+          <div class="pz-photo" id="pzPhoto"></div>
+          <div class="pz-viewer-bar">
+            <span id="pzPhotoStatus" class="pz-viewer-status">Sin foto ni render</span>
+            <label class="kb-btn">Cargar foto<input type="file" id="pzPhotoInput" accept="image/*" hidden></label>
+            <button type="button" id="pzPhotoRemove" class="kb-btn" hidden>Quitar</button>
+          </div>
+          <div class="pz-hint">Foto o render del producto terminado (JPG, PNG).</div>
+        </div>
+      </div>
+
+      <div class="pz-card">
+        <div class="pz-card-head">
+          <h3>Descripción y uso</h3>
+          <span class="pz-hint">¿Para qué se usa? Contexto, alcance, condiciones de operación.</span>
+        </div>
+        <textarea id="pzDescripcion" class="kb-desc" rows="5" placeholder="Describe el uso del producto…"></textarea>
+      </div>
+
+      <div class="pz-card">
+        <div class="pz-card-head">
+          <h3>Materiales y presupuesto</h3>
+          <span class="pz-hint">Cada pestaña es un presupuesto distinto (p. ej. otro material).</span>
+        </div>
+        <div class="pz-tabs" id="pzBudgetTabs"></div>
+        <div id="pzBudget"></div>
+      </div>
+
+      <div class="pz-card">
+        <div class="pz-card-head">
+          <h3>Mano de obra <span id="pzLaborFor" class="pz-for"></span></h3>
+          <span class="pz-hint">Posibles responsables de la ejecución, su contacto y precio. Es distinta en cada presupuesto.</span>
+        </div>
+        <div id="pzLabor"></div>
+        <button type="button" id="pzLaborAdd" class="kb-btn">+ Agregar persona</button>
+        <div class="pz-summary" id="pzLaborSummary">
+          <div><span>Subtotal materiales</span><b id="pzGrand2">$0,00</b></div>
+          <div><span>Subtotal mano de obra</span><b id="pzLaborTotal">$0,00</b></div>
+          <div class="pz-summary-total"><span>TOTAL DEL PRESUPUESTO</span><b id="pzTotalAll">$0,00</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INFRAESTRUCTURA Y MANTENIMIENTO ================= -->
+  <section class="tab-panel" id="panel-infra">
+    <div class="section-head">
+      <h2>Infraestructura y Mantenimiento</h2>
+      <p class="section-sub">Sección en construcción — próximamente.</p>
+    </div>
+    <div class="empty-section">
+      <div class="empty-icon" aria-hidden="true">🛠️</div>
+      <p>Aún no hay contenido en esta sección.</p>
     </div>
   </section>
 
@@ -1746,5 +1899,12 @@
 })();
 </script>
 <script src="app.js"></script>
+<script src="config.js"></script>
+<script src="dialog.js"></script>
+<script src="kanban.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/STLLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/GLTFLoader.js"></script>
+<script src="presentaciones.js"></script>
 </body>
 </html>
