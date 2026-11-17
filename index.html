@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261016d">
+<link rel="stylesheet" href="style.css?v=20261030c">
 </head>
 <body>
 
@@ -44,6 +44,8 @@
   <nav class="tabs group-nav" id="groupNav" aria-label="Subsecciones de Proyecto 3D" hidden>
     <button class="group-btn active" data-group="telemetria">Telemetría impresión</button>
     <button class="group-btn" data-group="nodo">NODO</button>
+    <button class="group-btn" data-group="diseno">Diseño</button>
+    <button class="group-btn" data-group="repo">Repositorio open source</button>
   </nav>
   <nav class="tabs sub-nav" id="tabNav-telemetria" data-group-tabs="telemetria" hidden>
     <button class="tab-btn" data-tab="impresiones">Impresiones 3D</button>
@@ -58,6 +60,12 @@
     <button class="tab-btn" data-tab="nodos">NODOS</button>
     <button class="tab-btn" data-tab="termico">Térmica NODO</button>
     <button class="tab-btn" data-tab="filtros">Filtros</button>
+  </nav>
+  <nav class="tabs sub-nav" id="tabNav-diseno" data-group-tabs="diseno" hidden>
+    <button class="tab-btn" data-tab="diseno">Flujo de diseño</button>
+  </nav>
+  <nav class="tabs sub-nav" id="tabNav-repo" data-group-tabs="repo" hidden>
+    <button class="tab-btn" data-tab="repo">Repositorio</button>
   </nav>
   <nav class="tabs sub-nav" id="tabNav-infra" data-group-tabs="infra" hidden>
     <button class="tab-btn" data-tab="equipos">Equipos</button>
@@ -915,6 +923,80 @@
     </aside>
   </section>
 
+  <!-- ================= PROYECTO 3D · FLUJO DE DISEÑO ================= -->
+  <section class="tab-panel" id="panel-diseno">
+    <div class="section-head kb-head">
+      <div>
+        <h2>Flujo de diseño</h2>
+        <p class="section-sub">Requerimiento → Diseño → Prototipo → Fabricación → Calidad. Cada tarjeta tiene un responsable; al llegar a Calidad se pondera el diseño.</p>
+      </div>
+      <div class="kb-actions">
+        <span id="dsStatus" class="kb-status"></span>
+        <select id="dsFilter" class="ds-filter" aria-label="Filtrar por responsable"></select>
+        <button type="button" id="dsNew" class="kb-btn kb-btn-primary">+ Nueva tarjeta</button>
+      </div>
+    </div>
+
+    <details class="ds-cap" id="dsCapBox" open>
+      <summary><span class="ds-cap-title">Capacidad del equipo de diseño</span><span class="pz-hint" id="dsCapHint"></span></summary>
+      <div class="pz-table-wrap"><table class="pz-table ds-cap-table">
+        <thead><tr>
+          <th>Responsable</th><th class="num">Activas</th><th class="num">Horas activas</th><th class="num">Capacidad (h/sem)</th>
+          <th>Carga</th><th class="num">Completadas</th><th class="num">A tiempo</th><th class="num">Calidad prom.</th><th class="num">Vencidas</th>
+        </tr></thead>
+        <tbody id="dsCapBody"></tbody>
+      </table></div>
+      <p class="pz-hint">Carga = horas activas ÷ capacidad semanal (≈ semanas de trabajo comprometidas). «A tiempo» = completadas dentro de su fecha objetivo. «Calidad prom.» = nota media (0–10) de las evaluaciones.</p>
+    </details>
+
+    <div class="kb-board" id="dsBoard"></div>
+
+    <div class="kb-overlay" id="dsOverlay"></div>
+    <aside class="kb-drawer ds-drawer" id="dsDrawer" aria-label="Detalle de la tarjeta de diseño">
+      <div class="kb-drawer-bar">
+        <button type="button" id="dsClose" class="kb-btn" title="Cerrar (Esc)">✕ Cerrar</button>
+        <button type="button" id="dsDelete" class="kb-btn kb-btn-danger">Eliminar</button>
+      </div>
+      <div class="kb-drawer-body">
+        <input id="dsTitulo" class="kb-title-input" type="text" placeholder="Nombre del diseño" maxlength="120">
+        <div class="kb-prop"><label for="dsEstado">Etapa</label><select id="dsEstado"></select></div>
+        <div class="kb-prop"><label for="dsResp">Responsable</label><input id="dsResp" type="text" list="dsRespList" placeholder="Diseñador a cargo"><datalist id="dsRespList"></datalist></div>
+        <div class="kb-prop"><label for="dsHoras">Esfuerzo estimado (h)</label><input id="dsHoras" type="number" min="0" step="any" placeholder="Horas"></div>
+        <div class="kb-prop"><label for="dsInicio">Fecha de inicio</label><input id="dsInicio" type="date"></div>
+        <div class="kb-prop"><label for="dsFin">Fecha objetivo</label><input id="dsFin" type="date"></div>
+        <h4 class="kb-h">Requerimiento</h4>
+        <textarea id="dsDescripcion" class="kb-desc" rows="5" placeholder="¿Qué debe lograr este diseño? Objetivos, restricciones, medidas…"></textarea>
+
+        <div id="dsQuality" class="ds-quality" hidden>
+          <h4 class="kb-h">Evaluación de calidad</h4>
+          <p class="pz-hint">Edita las 4 características según este diseño. Los pesos suman 100%; cada una se califica de 0 a 10.</p>
+          <div id="dsCrit"></div>
+          <div class="ds-score" id="dsScore"></div>
+          <div class="kb-prop"><label for="dsUmbral">Nota mínima para aprobar</label><input id="dsUmbral" type="number" min="0" max="10" step="0.1"></div>
+          <button type="button" id="dsCloseBtn" class="kb-btn kb-btn-primary ds-closebtn"></button>
+        </div>
+        <p class="pz-hint ds-qhint" id="dsQHint" hidden>La evaluación de calidad aparece cuando la tarjeta está en la etapa Calidad.</p>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ================= PROYECTO 3D · REPOSITORIO OPEN SOURCE ================= -->
+  <section class="tab-panel" id="panel-repo">
+    <div class="section-head kb-head">
+      <div>
+        <h2>Repositorio open source</h2>
+        <p class="section-sub">Piezas y modelos abiertos que nos sirven de referencia o de punto de partida. Agrega el enlace y la foto se busca sola cuando el sitio lo permite.</p>
+      </div>
+      <div class="kb-actions">
+        <span id="rpStatus" class="kb-status"></span>
+        <input type="search" id="rpQ" class="rp-search" placeholder="Buscar pieza…" aria-label="Buscar en el repositorio">
+        <button type="button" id="rpNew" class="kb-btn kb-btn-primary">+ Agregar pieza</button>
+      </div>
+    </div>
+    <div class="rp-grid" id="rpGrid"></div>
+    <div class="pz-empty" id="rpEmpty" hidden>Aún no hay piezas en el repositorio. Agrega la primera con «+ Agregar pieza».</div>
+  </section>
+
   <!-- ================= PRESENTACIÓN DE PROYECTOS (Ingeniería) ================= -->
   <section class="tab-panel" id="panel-presentaciones">
     <div class="section-head kb-head">
@@ -1069,19 +1151,19 @@
     <div class="section-head kb-head">
       <div>
         <h2>Matriz comparativa</h2>
-        <p class="section-sub">Ponderación y ranking por sección. Cada hoja del Excel o Google Sheet es una categoría.</p>
+        <p class="section-sub">Compara productos por criterios ponderados. Crea una categoría, define sus columnas y agrega productos: con un enlace se trae la foto, el nombre y la marca cuando el sitio lo permite.</p>
       </div>
       <div class="kb-actions">
         <span id="cmStatus" class="kb-status"></span>
-        <button type="button" id="cmRefresh" class="kb-btn" hidden>↻ Actualizar</button>
-        <button type="button" id="cmChange" class="kb-btn" hidden>Cambiar fuente</button>
+        <button type="button" id="cmImportBtn" class="kb-btn">Importar Excel / Sheets</button>
+        <button type="button" id="cmNewCat" class="kb-btn kb-btn-primary">+ Nueva categoría</button>
       </div>
     </div>
 
-    <div class="cm-source" id="cmSource">
+    <div class="cm-source" id="cmSource" hidden>
       <div class="cm-source-card">
-        <h3>Elige de dónde traer tus productos</h3>
-        <p class="pz-hint">Cada hoja se convierte en una categoría. Un Excel subido solo vive en tu navegador; para compartirlo con el equipo, conecta un Google Sheets.</p>
+        <h3>Importar desde Excel o Google Sheets</h3>
+        <p class="pz-hint">Cada hoja se convierte en una categoría con sus productos, que quedan guardados en la página y se pueden seguir editando aquí. Es opcional: ya no hace falta un archivo para usar la matriz.</p>
         <div class="cm-srctabs" id="cmSrcTabs">
           <button type="button" class="cm-srctab active" data-src="excel">Subir Excel</button>
           <button type="button" class="cm-srctab" data-src="sheets">Google Sheets</button>
@@ -1098,20 +1180,22 @@
           <p class="pz-hint">Pega la URL <code>/exec</code> de tu Apps Script de solo lectura (publicado como Web App con acceso «Cualquier usuario»).</p>
           <div class="cm-url-row">
             <input type="url" id="cmUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
-            <button type="button" class="kb-btn kb-btn-primary" id="cmConnect">Conectar</button>
+            <button type="button" class="kb-btn kb-btn-primary" id="cmConnect">Importar</button>
           </div>
         </div>
         <div class="cm-err" id="cmErr"></div>
         <div class="cm-contract">
           <b>Formato de las hojas</b> (por posición de columna):<br>
-          A Sección · B Marca · C Título · D Imagen (URL) · E:I hasta 5 criterios · J:O hasta 6 características · el resto, «Ver más detalles».<br>
-          Las columnas <code>Set: &lt;parte&gt;</code> suman el precio del «full set».
+          A Sección · B Marca · C Título · D Imagen (URL) · E:I hasta 5 criterios · J:O hasta 6 características · el resto, «Detalles».<br>
+          Las columnas <code>Set: &lt;parte&gt;</code> pasan a ser las partes del «full set».
         </div>
+        <div class="dlg-actions" style="margin-top:14px"><button type="button" class="kb-btn" id="cmImportClose">Cerrar</button></div>
       </div>
     </div>
 
+    <div class="pz-empty" id="cmEmpty" hidden>Aún no hay categorías. Crea la primera con «+ Nueva categoría» (por ejemplo «Escáneres 3D» o «Filamentos») o importa un Excel.</div>
+
     <div id="cmApp" hidden>
-      <div class="cm-srcbar"><span class="cm-dot"></span><span id="cmSrcLabel"></span><b id="cmSrcName"></b><span id="cmSrcMeta" class="pz-hint"></span></div>
       <div class="pz-list" id="cmCats"></div>
       <div id="cmBody"></div>
       <div class="pz-card" id="cmVal"></div>
@@ -2071,18 +2155,20 @@
   drawTermicoChart();
 })();
 </script>
-<script src="app.js?v=20261016d"></script>
-<script src="config.js?v=20261016d"></script>
-<script src="dialog.js?v=20261016d"></script>
-<script src="kanban.js?v=20261016d"></script>
+<script src="app.js?v=20261030c"></script>
+<script src="config.js?v=20261030c"></script>
+<script src="dialog.js?v=20261030c"></script>
+<script src="kanban.js?v=20261030c"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/STLLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/OBJLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.138.3/examples/js/loaders/GLTFLoader.js"></script>
-<script src="presentaciones.js?v=20261016d"></script>
-<script src="shared.js?v=20261016d"></script>
-<script src="compras.js?v=20261016d"></script>
-<script src="comparativa.js?v=20261016d"></script>
-<script src="equipos-seed.js?v=20261016d"></script>
-<script src="equipos.js?v=20261016d"></script>
+<script src="presentaciones.js?v=20261030c"></script>
+<script src="shared.js?v=20261030c"></script>
+<script src="compras.js?v=20261030c"></script>
+<script src="comparativa.js?v=20261030c"></script>
+<script src="equipos-seed.js?v=20261030c"></script>
+<script src="equipos.js?v=20261030c"></script>
+<script src="diseno.js?v=20261030c"></script>
+<script src="repositorio.js?v=20261030c"></script>
 </body>
 </html>
