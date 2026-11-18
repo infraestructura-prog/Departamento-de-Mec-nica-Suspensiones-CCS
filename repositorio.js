@@ -50,7 +50,7 @@
     setStatus("Guardando…", "busy");
     p.actualizado = new Date().toISOString();
     return store.save(p).then(
-      () => setStatus(store.remote ? "Guardado en Google" : "Guardado (modo local)", "ok"),
+      () => setStatus(store.remote ? "Guardado en la nube" : "Guardado (modo local)", "ok"),
       (err) => { setStatus("Error al guardar: " + err.message, "err"); throw err; }
     );
   }
@@ -274,7 +274,7 @@
       state.items = await store.list();
       state.loaded = true;
       render();
-      setStatus(store.remote ? "Conectado a Google" : "Modo local (sin Apps Script configurado)", "ok");
+      setStatus(store.remote ? "Conectado a la nube" : "Modo local (sin Supabase configurado)", "ok");
     } catch (err) { setStatus("No se pudo cargar: " + err.message, "err"); }
   }
 
