@@ -47,7 +47,7 @@
       l.actualizado = new Date().toISOString();
       try {
         await store.save(l);
-        setStatus(store.remote ? "Guardado en Google" : "Guardado (modo local)", "ok");
+        setStatus(store.remote ? "Guardado en la nube" : "Guardado (modo local)", "ok");
       } catch (err) { setStatus("Error al guardar: " + err.message, "err"); }
     };
     if (immediate) run(); else state.timers[l.id] = setTimeout(run, 600);
@@ -434,7 +434,7 @@
       state.loaded = true;
       renderList();
       if (state.lists.length) openList(state.lists[0].id);
-      setStatus(store.remote ? "Conectado a Google" : "Modo local (sin Apps Script configurado)", "ok");
+      setStatus(store.remote ? "Conectado a la nube" : "Modo local (sin Supabase configurado)", "ok");
     } catch (err) { setStatus("No se pudo cargar: " + err.message, "err"); }
   }
 
