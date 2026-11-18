@@ -24,12 +24,14 @@
   if (!board) return;
 
   const state = { cards: [], openId: null, dragId: null, saveTimers: {}, loaded: false };
-  const remote = !!KANBAN_API_URL;
+  const sbOn = !!(window.SB && window.SB.enabled);
+  const remote = !!KANBAN_API_URL || sbOn;
 
   // ------------------------------------------------------------- storage ----
 
   const api = {
     async list() {
+      if (sbOn) return window.SB.list("cards");
       if (!remote) return JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
       const r = await fetch(KANBAN_API_URL);
       const j = await r.json();
@@ -37,6 +39,7 @@
       return j.cards;
     },
     async save(card) {
+      if (sbOn) return window.SB.save("cards", card);
       if (!remote) {
         const all = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
         const i = all.findIndex((c) => c.id === card.id);
@@ -47,6 +50,7 @@
       return post({ action: "save", card }).then((j) => j.card);
     },
     async remove(id) {
+      if (sbOn) return window.SB.remove("cards", id);
       if (!remote) {
         const all = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]").filter((c) => c.id !== id);
         localStorage.setItem(LOCAL_KEY, JSON.stringify(all));
@@ -56,6 +60,7 @@
     },
     // Devuelve {id, name, mime, url?}; en modo local el archivo va como dataURL
     async upload(file, dataB64) {
+      if (sbOn) return window.SB.upload(file);
       if (!remote) {
         return { id: uid(), name: file.name, mime: file.type, url: "data:" + file.type + ";base64," + dataB64 };
       }
@@ -224,7 +229,7 @@
       delete state.saveTimers[card.id];
       try {
         await api.save(card);
-        setStatus(remote ? "Guardado en Google" : "Guardado (modo local)", "ok");
+        setStatus(remote ? "Guardado en la nube" : "Guardado (modo local)", "ok");
       } catch (err) {
         setStatus("Error al guardar: " + err.message, "err");
       }
@@ -405,7 +410,7 @@
         // no pisar lo que se está escribiendo
         if (!drawer.contains(document.activeElement)) fillDrawer(byId(state.openId));
       }
-      setStatus(remote ? "Conectado a Google" : "Modo local (sin Apps Script configurado)", "ok");
+      setStatus(remote ? "Conectado a la nube" : "Modo local (sin Supabase configurado)", "ok");
     } catch (err) {
       setStatus("No se pudo cargar: " + err.message, "err");
     }
