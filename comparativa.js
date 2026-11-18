@@ -93,7 +93,7 @@
     const run = async () => {
       delete state.timers[cat.id];
       cat.actualizado = new Date().toISOString();
-      try { await cStore.save(cat); setStatus(cStore.remote ? "Guardado en Google" : "Guardado (modo local)", "ok"); }
+      try { await cStore.save(cat); setStatus(cStore.remote ? "Guardado en la nube" : "Guardado (modo local)", "ok"); }
       catch (err) { setStatus("Error al guardar: " + err.message, "err"); }
     };
     if (immediate) run(); else state.timers[cat.id] = setTimeout(run, 700);
@@ -760,7 +760,7 @@
       setStatus(store_label(), "ok");
     } catch (ex) { err.textContent = "No se pudo guardar: " + ex.message; err.hidden = false; }
   }
-  const store_label = () => (pStore.remote ? "Guardado en Google" : "Guardado (modo local)");
+  const store_label = () => (pStore.remote ? "Guardado en la nube" : "Guardado (modo local)");
 
   // -------------------------------------------------- importar Excel / Sheets ----
 
@@ -940,7 +940,7 @@
       try { saved = localStorage.getItem(LS_URL) || ""; } catch (e) { /* sin almacenamiento */ }
       $("cmUrl").value = CONFIG_URL || saved;
       renderAll();
-      setStatus(cStore.remote ? "Conectado a Google" : "Modo local (sin Apps Script configurado)", "ok");
+      setStatus(cStore.remote ? "Conectado a la nube" : "Modo local (sin Supabase configurado)", "ok");
     } catch (err) { setStatus("No se pudo cargar: " + err.message, "err"); }
   }
 
