@@ -93,7 +93,7 @@
       c.actualizado = new Date().toISOString();
       try {
         await store.save(c);
-        setStatus(store.remote ? "Guardado en Google" : "Guardado (modo local)", "ok");
+        setStatus(store.remote ? "Guardado en la nube" : "Guardado (modo local)", "ok");
       } catch (err) { setStatus("Error al guardar: " + err.message, "err"); }
     };
     if (immediate) run(); else state.timers[c.id] = setTimeout(run, 600);
@@ -115,7 +115,7 @@
     if (!p) { p = { id: "dis-" + slug(name), nombre: name, capacidad: cap, orden: state.people.length + 1 }; state.people.push(p); }
     p.capacidad = cap;
     p.actualizado = new Date().toISOString();
-    try { await pStore.save(p); setStatus(pStore.remote ? "Guardado en Google" : "Guardado (modo local)", "ok"); }
+    try { await pStore.save(p); setStatus(pStore.remote ? "Guardado en la nube" : "Guardado (modo local)", "ok"); }
     catch (err) { setStatus("Error al guardar capacidad: " + err.message, "err"); }
   }
 
@@ -144,7 +144,7 @@
     body.innerHTML = names.map((n) => {
       const s = statsFor(n);
       const lvl = s.load > 1 ? "bad" : s.load >= 0.8 ? "warn" : "ok";
-      return "<tr><td><b>" + esc(n) + "</b></td>" +
+      return '<tr><td><span class="ds-cap-name">' + (typeof teamAvatarHTML === "function" ? teamAvatarHTML(n) : "") + "<b>" + esc(n) + "</b></span></td>" +
         '<td class="num">' + s.active + "</td>" +
         '<td class="num">' + (s.hours ? fmt1(s.hours) : "0") + "</td>" +
         '<td class="num"><input type="number" min="1" step="1" class="ds-capinput" data-name="' + esc(n) + '" value="' + s.cap + '" aria-label="Capacidad semanal de ' + esc(n) + '"></td>' +
@@ -209,7 +209,7 @@
       '<div class="kb-card-title">' + (c.cerrado ? "✓ " : "") + esc(c.titulo || "Sin título") + "</div>" +
       (c.descripcion ? '<div class="kb-card-desc">' + esc(c.descripcion) + "</div>" : "") +
       '<div class="kb-card-meta">' +
-      '<span class="kb-chip' + (c.responsable ? "" : " ds-nobody") + '">👤 ' + esc(c.responsable || "Sin responsable") + "</span>" +
+      '<span class="kb-chip ds-resp-chip' + (c.responsable ? "" : " ds-nobody") + '">' + (c.responsable && typeof teamAvatarHTML === "function" ? teamAvatarHTML(c.responsable) : "👤 ") + esc(c.responsable || "Sin responsable") + "</span>" +
       (num(c.horas) ? '<span class="kb-chip">⏱ ' + num(c.horas) + " h</span>" : "") +
       (c.fin ? '<span class="kb-chip' + (overdue ? " ds-overdue" : "") + '">📅 ' + fmtDate(c.fin) + (overdue ? " · vencida" : "") + "</span>" : "") +
       (c.estado === "CALIDAD" ? '<span class="kb-chip ds-score-chip ' + scoreClass(c, sc) + '">★ ' + (sc === null ? "sin evaluar" : fmt1(sc) + " / 10") + "</span>" : "") +
@@ -441,7 +441,7 @@
       renderFilter();
       render();
       if (state.openId && byId(state.openId) && !drawer.contains(document.activeElement)) fillDrawer(byId(state.openId));
-      setStatus(store.remote ? "Conectado a Google" : "Modo local (sin Apps Script configurado)", "ok");
+      setStatus(store.remote ? "Conectado a la nube" : "Modo local (sin Supabase configurado)", "ok");
     } catch (err) { setStatus("No se pudo cargar: " + err.message, "err"); }
   }
 
