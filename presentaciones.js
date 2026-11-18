@@ -7,7 +7,8 @@
   "use strict";
 
   const API_URL = window.INGENIERIA_API_URL || "";
-  const remote = !!API_URL;
+  const sbOn = !!(window.SB && window.SB.enabled);
+  const remote = !!API_URL || sbOn;
   const LOCAL_KEY = "propuestasIngenieria.v1";
   const MAX_FILE_MB = 12;
 
@@ -39,12 +40,14 @@
 
   const api = {
     async list() {
+      if (sbOn) return window.SB.list("propuestas");
       if (!remote) return localAll();
       const j = await (await fetch(API_URL)).json();
       if (!j.ok) throw new Error(j.error || "Error al leer");
       return j.propuestas || [];
     },
     async save(p) {
+      if (sbOn) { await window.SB.save("propuestas", p); return; }
       if (!remote) {
         const all = localAll();
         const i = all.findIndex((x) => x.id === p.id);
@@ -55,10 +58,12 @@
       await post({ action: "saveProp", propuesta: p });
     },
     async remove(id) {
+      if (sbOn) { await window.SB.remove("propuestas", id); return; }
       if (!remote) { localSet(localAll().filter((x) => x.id !== id)); return; }
       await post({ action: "deleteProp", id });
     },
     async upload(file) {
+      if (sbOn) return window.SB.upload(file);
       const b64 = await readB64(file);
       if (!remote) return { id: uid(), name: file.name, mime: file.type, url: "data:" + (file.type || "application/octet-stream") + ";base64," + b64 };
       return post({ action: "upload", name: file.name, mime: file.type, data: b64 }).then((j) => j.file);
@@ -112,7 +117,7 @@
       p.actualizado = new Date().toISOString();
       try {
         await api.save(p);
-        setStatus(remote ? "Guardado en Google" : "Guardado (modo local)", "ok");
+        setStatus(remote ? "Guardado en la nube" : "Guardado (modo local)", "ok");
       } catch (err) { setStatus("Error al guardar: " + err.message, "err"); }
     };
     if (immediate) run(); else state.timers[p.id] = setTimeout(run, 600);
@@ -596,7 +601,7 @@
       state.loaded = true;
       renderList();
       if (state.items.length) openProp(state.items[0].id);
-      setStatus(remote ? "Conectado a Google" : "Modo local (sin Apps Script configurado)", "ok");
+      setStatus(remote ? "Conectado a la nube" : "Modo local (sin Supabase configurado)", "ok");
     } catch (err) { setStatus("No se pudo cargar: " + err.message, "err"); }
   }
 
