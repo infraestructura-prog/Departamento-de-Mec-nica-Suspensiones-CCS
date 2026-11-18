@@ -53,7 +53,9 @@ window.IngShared = (function () {
   // o = { localKey, listField, saveAction, saveField, deleteAction }
   function createStore(o) {
     const API = window.INGENIERIA_API_URL || "";
-    const remote = !!API;
+    const sb = window.SB && window.SB.enabled;
+    const remote = !!API || !!sb;
+    const KIND = o.listField;
     const localAll = () => JSON.parse(localStorage.getItem(o.localKey) || "[]");
     const localSet = (all) => {
       try { localStorage.setItem(o.localKey, JSON.stringify(all)); }
@@ -72,12 +74,14 @@ window.IngShared = (function () {
     return {
       remote,
       async list() {
+        if (sb) return window.SB.list(KIND);
         if (!remote) return localAll();
         const j = await (await fetch(API)).json();
         if (!j.ok) throw new Error(j.error || "Error al leer");
         return j[o.listField] || [];
       },
       async save(x) {
+        if (sb) { await window.SB.save(KIND, x); return; }
         if (!remote) {
           const all = localAll();
           const i = all.findIndex((y) => y.id === x.id);
@@ -89,11 +93,13 @@ window.IngShared = (function () {
         await post(payload);
       },
       async remove(id) {
+        if (sb) { await window.SB.remove(KIND, id); return; }
         if (!remote) { localSet(localAll().filter((y) => y.id !== id)); return; }
         await post({ action: o.deleteAction, id });
       },
       async upload(file) {
         if (file.size > 12 * 1024 * 1024) throw new Error("Máx. 12 MB por archivo");
+        if (sb) return window.SB.upload(file);
         const b64 = await readB64(file);
         if (!remote) return { id: uid(), name: file.name, mime: file.type, url: "data:" + (file.type || "application/octet-stream") + ";base64," + b64 };
         return post({ action: "upload", name: file.name, mime: file.type, data: b64 }).then((j) => j.file);
